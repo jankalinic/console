@@ -60,7 +60,6 @@ jobs:
       - name: Push Images To Minikube
         run: |
           eval $(minikube docker-env)
-          minikube cache list
           minikube cache add $CONSOLE_API_IMAGE
           minikube cache add $CONSOLE_API_IMAGE
           minikube cache reload
@@ -90,7 +89,10 @@ jobs:
         run: ./install/002-deploy-console-kafka.sh $TARGET_NAMESPACE $CLUSTER_DOMAIN zk
 
       - name: Get pods
-        run: kubectl get pods -n $TARGET_NAMESPACE
+        run: |
+          kubectl get pods -n $TARGET_NAMESPACE
+          sleep 20
+          kubectl get pods -n $TARGET_NAMESPACE
 
       - name: Wait For Kafka
         run: kubectl wait kafka/console-kafka --for=condition=Ready --timeout=300s -n $TARGET_NAMESPACE
@@ -98,11 +100,13 @@ jobs:
       - name: Wait For Kafka User Secret
         run: while ! kubectl get secret console-kafka-user1 -n $TARGET_NAMESPACE; do echo "Waiting for user secret"; sleep 5; done
 
-      - name: Prepare config
-        shell: bash
-        run: |
-          USERPS=$(kubectl get secret console-kafka-user1 -n $TARGET_NAMESPACE -o yaml | yq '.data.password' - | base64 --decode)
-          sed -i -e "s#\$USER_PASSWORD#${USERPS}#g" -e "s#\$CLUSTER_DOMAIN#${CLUSTER_DOMAIN}#g" -e "s#\$NAMESPACE#${TARGET_NAMESPACE}#g" $CONFIG_YAML
+#     Todo: not needed as operator should create that
+#
+#      - name: Prepare config
+#        shell: bash
+#        run: |
+#          USERPS=$(kubectl get secret console-kafka-user1 -n $TARGET_NAMESPACE -o yaml | yq '.data.password' - | base64 --decode)
+#          sed -i -e "s#\$USER_PASSWORD#${USERPS}#g" -e "s#\$CLUSTER_DOMAIN#${CLUSTER_DOMAIN}#g" -e "s#\$NAMESPACE#${TARGET_NAMESPACE}#g" $CONFIG_YAML
 
       - name: Switch image from remote to local only
         shell: bash
@@ -110,7 +114,7 @@ jobs:
             sed -i -e "s#imagePullPolicy: Always#imagePullPolicy: Never#g" $DEPLOYMENT_YAML
 
       - name: Deploy console
-        run: ./install/003-install-console.sh $TARGET_NAMESPACE $CLUSTER_DOMAIN $CONFIG_YAML
+        run: ./install/003-install-console-operator.sh $TARGET_NAMESPACE
 
       - name: Show pods
         run: kubectl get pods -n $TARGET_NAMESPACE
