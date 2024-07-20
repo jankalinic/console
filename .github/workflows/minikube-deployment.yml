@@ -72,6 +72,10 @@ jobs:
       - name: Wait For Kafka User Secret
         run: while ! kubectl get secret console-kafka-user1 -n $TARGET_NAMESPACE; do echo "Waiting for user secret"; sleep 5; done
 
+      - name: OperatorGroup
+        run: |
+          yq '.spec.targetNamespaces[0] = strenv(TARGET_NAMESPACE)' ./install/resources/operators/console-operators.operatorgroup.yaml | kubectl apply -n ${NAMESPACE} -f -
+
       - name: Deploy Console Operator
         run: ./install/003-install-console-operator.sh $TARGET_NAMESPACE
 
