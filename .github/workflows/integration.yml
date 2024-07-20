@@ -4,16 +4,10 @@ on:
     branches: [ 'main' ]
   pull_request:
     branches: [ 'main' ]
-    types: [ opened, reopened, synchronize ]
 
 jobs:
   build-api:
     runs-on: ubuntu-latest
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
     steps:
 
       - name: Checkout
