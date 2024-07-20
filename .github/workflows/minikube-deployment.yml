@@ -23,6 +23,16 @@ jobs:
           curl -L https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 > yq && chmod +x yq
           sudo cp -v yq /usr/bin/
 
+      - name: Install Operator SDK
+        run: |
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+          export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.35.0
+          curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+          chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+          operator-sdk olm install 
+          operator-sdk olm status 
+
       - name: Start minikube
         id: minikube
         uses: medyagh/setup-minikube@latest
@@ -36,9 +46,12 @@ jobs:
           minikube addons enable ingress-dns
           kubectl patch deployment -n ingress-nginx ingress-nginx-controller --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value":"--enable-ssl-passthrough"}]'
 
-
       - name: Create namespace
         run: kubectl create namespace $TARGET_NAMESPACE
+
+      - name: Deploy OperatorGroup
+        run: |
+          yq '.spec.targetNamespaces[0] = strenv(TARGET_NAMESPACE)' ./install/resources/operators/console-operators.operatorgroup.yaml | kubectl apply -n ${$TARGET_NAMESPACE} -f -
 
       - name: Install Strimzi
         run: kubectl create -f "https://strimzi.io/install/latest?namespace=$TARGET_NAMESPACE" -n $TARGET_NAMESPACE
@@ -71,10 +84,6 @@ jobs:
 
       - name: Wait For Kafka User Secret
         run: while ! kubectl get secret console-kafka-user1 -n $TARGET_NAMESPACE; do echo "Waiting for user secret"; sleep 5; done
-
-      - name: OperatorGroup
-        run: |
-          yq '.spec.targetNamespaces[0] = strenv(TARGET_NAMESPACE)' ./install/resources/operators/console-operators.operatorgroup.yaml | kubectl apply -n ${NAMESPACE} -f -
 
       - name: Deploy Console Operator
         run: ./install/003-install-console-operator.sh $TARGET_NAMESPACE
