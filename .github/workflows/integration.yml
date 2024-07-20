@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: minikube
-        uses: ./.github/workflows/minikube-deployment.yml
+        uses: .github/workflows/minikube-deployment.yml
 #
 #      - name: Set Image Tag Env
 #        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
