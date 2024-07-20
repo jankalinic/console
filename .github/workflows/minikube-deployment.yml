@@ -91,6 +91,16 @@ jobs:
           sleep 20
           kubectl get pods -n $TARGET_NAMESPACE
 
+      - name: Wait For Operator Pod
+        run: |
+          kubectl get pods -n $TARGET_NAMESPACE -o yaml | yq '.items[] | select(.metadata.name | test("^console-operator")) | .metadata.name' - | xargs -I {} kubectl wait --for=condition=Ready pod/{} -n $TARGET_NAMESPACE --timeout=300s
+
+      - name: Get pods
+        run: |
+          kubectl get pods -n $TARGET_NAMESPACE
+          sleep 20
+          kubectl get crds | grep github
+
       - name: Apply Console Instance CR file
         shell: bash
         run: |
