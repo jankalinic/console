@@ -1,7 +1,7 @@
 name: Minikube Deployment
 
 on:
-  workflow_call:
+  pull_request:
 
 env:
   TARGET_NAMESPACE: "console-namespace"
