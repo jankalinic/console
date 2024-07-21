@@ -122,9 +122,9 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator:${{ env.PROJECT_VERSION }}
-          docker save -o console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
-          docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+          docker save -o localhost:5000/streamshub/console-operator-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator:${{ env.PROJECT_VERSION }}
+          docker save -o localhost:5000/streamshub/console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
+          docker save -o localhost:5000/streamshub/console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
 
       - name: Archive UI Image file
         uses: actions/upload-artifact@v4
