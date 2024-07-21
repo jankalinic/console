@@ -180,8 +180,8 @@ jobs:
 #          name: streamshub/console-ui:${{ env.PROJECT_VERSION }}
 #          path: console-ui-${{ env.PROJECT_VERSION }}.tar.gz
 
-  minikube-deployment:
-    uses: .github/workflows/minikube-deployment.yml
+  call-minikube-deployment:
+    uses: ./.github/workflows/minikube-deployment.yml
     needs:
       - build-api
       - build-ui
