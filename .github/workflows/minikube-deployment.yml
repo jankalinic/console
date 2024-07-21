@@ -113,6 +113,16 @@ jobs:
         run: |
           docker ps
           kubectl get pods -n $TARGET_NAMESPACE
+          kubectl get deployments -n $TARGET_NAMESPACE
+          sleep 20
+          kubectl get pods -n $TARGET_NAMESPACE
+          kubectl get deployments -n $TARGET_NAMESPACE
+          sleep 60
+          kubectl get pods -n $TARGET_NAMESPACE
+          kubectl get deployments -n $TARGET_NAMESPACE
+          sleep 20
+          kubectl get pods -n $TARGET_NAMESPACE
+          kubectl get deployments -n $TARGET_NAMESPACE
 
       - name: curl grep
         run: curl -L http://example-console.192.168.49.2.nip.io | grep "console-kafka"
