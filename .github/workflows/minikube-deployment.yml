@@ -22,6 +22,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set Image Tag Env
+        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Install yq
         run: |
           curl -L https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 > yq && chmod +x yq
@@ -35,16 +38,17 @@ jobs:
           memory: 4096m
 
       - name: Download Docker images artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          name: docker-images
-          path: .
+          name: operator-images
+          path: |
+            console-operator-${{ env.PROJECT_VERSION }}.tar.gz
+            console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
 
       - name: Load Docker images from tar files
         run: |
-          for tarfile in *.tar; do
-            docker load -i $tarfile
-          done
+          docker load -i console-operator-${{ env.PROJECT_VERSION }}.tar.gz
+          docker load -i console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
 
       - name: Verify Docker Images
         run: docker images

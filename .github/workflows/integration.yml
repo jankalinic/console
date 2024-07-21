@@ -15,17 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: D1
-        run: |
-          docker pull ubuntu
-          docker tag ubuntu localhost:5000/streamshub/testbuntu
-          docker push localhost:5000/streamshub/testbuntu
-
-      - name: D2
-        run: |
-          docker images
-          curl -X GET localhost:5000/v2/_catalog
-
       - name: Set Image Tag Env
         run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
@@ -159,7 +148,6 @@ jobs:
           name: operator-images
           path: |
             console-operator-${{ env.PROJECT_VERSION }}.tar.gz
-            console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz
             console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
 
   build-ui:
