@@ -124,7 +124,8 @@ jobs:
 
       - name: Save Operator Images
         run: |
-          docker images
+          docker pull localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
+          docker pull localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
           docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
           docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
 
