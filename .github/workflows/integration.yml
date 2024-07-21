@@ -14,6 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: D1
         run: |
           docker pull ubuntu
@@ -23,7 +24,7 @@ jobs:
       - name: D2
         run: |
           docker images
-          docker search localhost:5000/streamshub/testbuntu
+          curl -X GET localhost:5000/v2/_catalog
 
       - name: Set Image Tag Env
         run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -73,7 +74,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search localhost:5000/streamshub/console-operator
+          curl -X GET localhost:5000/v2/_catalog
 
       - name: Modify CSV Annotation
         run: ./operator/bin/modify-bundle-metadata.sh
@@ -92,7 +93,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search localhost:5000/streamshub/console-operator-bundle
+          curl -X GET localhost:5000/v2/_catalog
 
       - name: Build Operator Catalog
         run: |
@@ -116,7 +117,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search localhost:5000/streamshub/console-operator-catalog
+          curl -X GET localhost:5000/v2/_catalog
 
       - name: Archive Results
         uses: actions/upload-artifact@v4
