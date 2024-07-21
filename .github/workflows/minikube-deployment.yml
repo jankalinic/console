@@ -106,9 +106,6 @@ jobs:
           cat $CONSOLE_INSTANCE_YAML
           kubectl apply -f $CONSOLE_INSTANCE_YAML -n $TARGET_NAMESPACE
 
-      - name: Wait For Console Instance Deployment
-        run: kubectl wait deployment/example-console-deployment --for=condition=available --timeout=180s -n $TARGET_NAMESPACE
-
       - name: List Images and Pods
         run: |
           docker ps
@@ -123,6 +120,9 @@ jobs:
           sleep 20
           kubectl get pods -n $TARGET_NAMESPACE
           kubectl get deployments -n $TARGET_NAMESPACE
+
+      - name: Wait For Console Instance Deployment
+        run: kubectl wait deployment/example-console-deployment --for=condition=available --timeout=180s -n $TARGET_NAMESPACE
 
       - name: curl grep
         run: curl -L http://example-console.192.168.49.2.nip.io | grep "console-kafka"
