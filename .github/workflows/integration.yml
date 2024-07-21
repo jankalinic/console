@@ -63,7 +63,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator
+          docker search localhost:5000/streamshub/console-operator
 
       - name: Modify CSV Annotation
         run: ./operator/bin/modify-bundle-metadata.sh
@@ -82,7 +82,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator-bundle
+          docker search localhost:5000/streamshub/console-operator-bundle
 
       - name: Build Operator Catalog
         run: |
@@ -106,7 +106,7 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator-catalog
+          docker search localhost:5000/streamshub/console-operator-catalog
 
       - name: Archive Results
         uses: actions/upload-artifact@v4
