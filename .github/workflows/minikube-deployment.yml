@@ -97,9 +97,13 @@ jobs:
         run: |
           kubectl get pods -n $TARGET_NAMESPACE -o yaml | yq '.items[].metadata.name | select(. | test("^console-operator") and select(. | test("catalog") | not)) | .' | xargs -I {} kubectl wait --for=condition=Ready pod/{} -n $TARGET_NAMESPACE --timeout=300s
 
+      - name: Wait For Console Instance CRD
+        run: while ! kubectl get crd consoles.console.streamshub.github.com &> /dev/null; do echo "Waiting for Console CRD"; sleep 5; done
+
       - name: Apply Console Instance CR file
         run: |
           sed -i -e "s#\$TARGET_NAMESPACE#${TARGET_NAMESPACE}#g" -e "s#\$CLUSTER_DOMAIN#${CLUSTER_DOMAIN}#g" $CONSOLE_INSTANCE_YAML
+          cat $CONSOLE_INSTANCE_YAML
           kubectl apply -f $CONSOLE_INSTANCE_YAML -n $TARGET_NAMESPACE
 
       - name: Wait For Console Instance Deployment
