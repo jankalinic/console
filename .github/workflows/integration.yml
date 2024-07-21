@@ -122,6 +122,22 @@ jobs:
             !**/target/failsafe-reports/**/*
             !**/target/surefire-reports/**/*
 
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator:${{ env.PROJECT_VERSION }}
+          docker save -o console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
+          docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+
+      - name: Archive UI Image file
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-images
+          path: |
+            console-operator-${{ env.PROJECT_VERSION }}.tar.gz
+            console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz
+            console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
+
   build-ui:
     runs-on: ubuntu-latest
     steps:
@@ -157,3 +173,21 @@ jobs:
           push: false
           tags: |
             streamshub/console-ui:${{ env.PROJECT_VERSION }}
+
+#      - name: Save UI Image File
+#        run: docker save -o console-ui-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-ui:${{ env.PROJECT_VERSION }}
+#
+#      - name: Archive UI Image file
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: streamshub/console-ui:${{ env.PROJECT_VERSION }}
+#          path: console-ui-${{ env.PROJECT_VERSION }}.tar.gz
+
+  minikube-deployment:
+    needs:
+      - build-api
+      - build-ui
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: .github/workflows/minikube-deployment.yml

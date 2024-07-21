@@ -1,7 +1,7 @@
 name: Minikube Deployment
 
 on:
-  pull_request:
+  workflow_call:
 
 env:
   TARGET_NAMESPACE: "console-namespace"
@@ -29,6 +29,21 @@ jobs:
         with:
           cpus: 2
           memory: 4096m
+
+      - name: Download Docker images artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-images
+          path: .
+
+      - name: Load Docker images from tar files
+        run: |
+          for tarfile in *.tar; do
+            docker load -i $tarfile
+          done
+
+      - name: Verify Docker Images
+        run: docker images
 
       - name: Install Operator SDK
         run: |
