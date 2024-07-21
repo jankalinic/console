@@ -181,10 +181,7 @@ jobs:
 #          path: console-ui-${{ env.PROJECT_VERSION }}.tar.gz
 
   minikube-deployment:
+    uses: .github/workflows/minikube-deployment.yml
     needs:
       - build-api
       - build-ui
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: .github/workflows/minikube-deployment.yml
