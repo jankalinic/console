@@ -93,7 +93,7 @@ jobs:
 
       - name: Wait For Operator Pod
         run: |
-          kubectl get pods -n $TARGET_NAMESPACE -o yaml | yq '.items[] | select(.metadata.name | test("^console-operator")) | .metadata.name' - | xargs -I {} kubectl wait --for=condition=Ready pod/{} -n $TARGET_NAMESPACE --timeout=300s
+          kubectl get pods -n $TARGET_NAMESPACE -o yaml | yq '.items[].metadata.name | select(. | test("^console-operator") and  select(. | test("catalog")| not)) | .' | xargs -I {} kubectl wait --for=condition=Ready pod/{} -n $TARGET_NAMESPACE --timeout=300s
 
       - name: Get pods
         run: |
@@ -104,7 +104,7 @@ jobs:
       - name: Apply Console Instance CR file
         shell: bash
         run: |
-          sed -i -e "s#$TARGET_NAMESPACE#${TARGET_NAMESPACE}#g" -e "s#$CLUSTER_DOMAIN#${CLUSTER_DOMAIN}#g" $CONSOLE_INSTANCE_YAML
+          sed -i -e "s#\$TARGET_NAMESPACE#${TARGET_NAMESPACE}#g" -e "s#\$CLUSTER_DOMAIN#${CLUSTER_DOMAIN}#g" $CONSOLE_INSTANCE_YAML
           cat $CONSOLE_INSTANCE_YAML
           kubectl apply -f $CONSOLE_INSTANCE_YAML -n $TARGET_NAMESPACE
 
@@ -112,6 +112,7 @@ jobs:
         run: |
           kubectl get pods -n $TARGET_NAMESPACE
           sleep 20
+          kubectl get deployments -n $TARGET_NAMESPACE
           kubectl get pods -n $TARGET_NAMESPACE
 
       - name: Wait For Console Deployment
