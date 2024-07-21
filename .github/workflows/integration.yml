@@ -60,6 +60,11 @@ jobs:
             -Dquarkus.package.write-transformed-bytecode-to-build-output=true \
             -Dquarkus.docker.buildx.platform=linux/amd64,linux/arm64
 
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator
+
       - name: Modify CSV Annotation
         run: ./operator/bin/modify-bundle-metadata.sh
 
@@ -69,10 +74,15 @@ jobs:
           context: operator/target/bundle/console-operator/
           platforms: linux/amd64,linux/arm64
           provenance: false
-          push: false
+          push: true
           file: operator/target/bundle/console-operator/bundle.Dockerfile
           tags: |
-            streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
+            localhost:5000/streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
+
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator-bundle
 
       - name: Build Operator Catalog
         run: |
@@ -88,10 +98,15 @@ jobs:
           context: operator/target/
           platforms: linux/amd64,linux/arm64
           provenance: false
-          push: false
+          push: true
           file: operator/target/catalog.Dockerfile
           tags: |
-            streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+            localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          docker search --tls-verify=false --list-tags localhost:5000/streamshub/console-operator-catalog
 
       - name: Archive Results
         uses: actions/upload-artifact@v4
@@ -122,9 +137,8 @@ jobs:
       - name: Save Docker Image Files
         run: |
           docker images
-          docker save -o localhost:5000/streamshub/console-operator-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator:${{ env.PROJECT_VERSION }}
-          docker save -o localhost:5000/streamshub/console-operator-bundle-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
-          docker save -o localhost:5000/streamshub/console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+          docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar.gz localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
+          docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
 
       - name: Archive UI Image file
         uses: actions/upload-artifact@v4
