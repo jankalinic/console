@@ -50,8 +50,8 @@ jobs:
 
       - name: Load Docker images from tar files
         run: |
-          docker load -i console-operator-${{ env.PROJECT_VERSION }}.tar
-          docker load -i console-operator-catalog-${{ env.PROJECT_VERSION }}.tar
+          docker load -i operator-images/console-operator-${{ env.PROJECT_VERSION }}.tar
+          docker load -i operator-images/console-operator-catalog-${{ env.PROJECT_VERSION }}.tar
 
       - name: Verify Docker Images
         run: docker images
