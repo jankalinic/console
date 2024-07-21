@@ -14,6 +14,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: D1
+        run: |
+          docker pull ubuntu
+          docker tag ubuntu localhost:5000/streamshub/testbuntu
+          docker push localhost:5000/streamshub/testbuntu
+
+      - name: D2
+        run: |
+          docker images
+          docker search localhost:5000/streamshub/testbuntu
 
       - name: Set Image Tag Env
         run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
