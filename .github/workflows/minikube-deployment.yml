@@ -39,20 +39,14 @@ jobs:
 
       - name: Download Docker images artifact
         uses: actions/download-artifact@v4
-        with:
-          name: operator-images
-          path: console-operator-${{ env.PROJECT_VERSION }}.tar.gz
 
       - name: Download Docker images artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: operator-images
-          path: console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
+        run: ls -ltra
 
       - name: Load Docker images from tar files
         run: |
-          docker load -i console-operator-${{ env.PROJECT_VERSION }}.tar.gz
-          docker load -i console-operator-catalog-${{ env.PROJECT_VERSION }}.tar.gz
+          docker load -i console-operator-${{ env.PROJECT_VERSION }}.tar
+          docker load -i console-operator-catalog-${{ env.PROJECT_VERSION }}.tar
 
       - name: Verify Docker Images
         run: docker images
