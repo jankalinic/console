@@ -40,12 +40,102 @@ jobs:
         with:
           driver-opts: network=host
 
+      - name: Build and Test
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SONAR_ORG: ${{secrets.SONAR_ORG}}
+          SONAR_PROJECT: ${{secrets.SONAR_PROJECT}}
+          SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
+        run: |
+          #
+          # Set write-transformed-bytecode-to-build-output for IT coverage. Do NOT use the container image
+          # created by this step.
+          #
+          # See: https://quarkus.io/guides/tests-with-coverage#coverage-for-integration-tests
+          #
+          export QUARKUS_CONTAINER_IMAGE_REGISTRY="localhost:5000"
+          export QUARKUS_CONTAINER_IMAGE_PUSH=true
+          export QUARKUS_CONTAINER_IMAGE_TAG="${{ env.PROJECT_VERSION }}"
+          mvn verify -P container-image -B --no-transfer-progress \
+            -Dquarkus.package.write-transformed-bytecode-to-build-output=true \
+            -Dquarkus.docker.buildx.platform=linux/amd64,linux/arm64
+
       - name: Save Docker Image Files
         run: |
-          docker pull ubuntu
-          docker pull alpine
-          docker tag ubuntu localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
-          docker tag alpine localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+          docker images
+          curl -X GET localhost:5000/v2/_catalog
+
+      - name: Modify CSV Annotation
+        run: ./operator/bin/modify-bundle-metadata.sh
+
+      - name: Build Operator Bundle Image
+        uses: docker/build-push-action@v6
+        with:
+          context: operator/target/bundle/console-operator/
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          push: true
+          file: operator/target/bundle/console-operator/bundle.Dockerfile
+          tags: |
+            localhost:5000/streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
+
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          curl -X GET localhost:5000/v2/_catalog
+
+      - name: Build Operator Catalog
+        run: |
+          curl -L -o opm https://github.com/operator-framework/operator-registry/releases/download/v1.43.1/linux-amd64-opm
+          chmod +x opm
+          sudo cp -v opm /usr/bin/
+          rm -vf opm
+          operator/bin/generate-catalog.sh ${{ env.PROJECT_VERSION }}
+
+      - name: Build Operator Catalog Image
+        uses: docker/build-push-action@v6
+        with:
+          context: operator/target/
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          push: true
+          file: operator/target/catalog.Dockerfile
+          tags: |
+            localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
+
+      - name: Save Docker Image Files
+        run: |
+          docker images
+          curl -X GET localhost:5000/v2/_catalog
+
+      - name: Archive Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: artifacts
+          path: api/target/failsafe-reports/
+
+      ## Save the context information for use in Sonar analysis
+      - name: Save Build Context
+        run: |
+          mkdir -vp target
+          echo "$GITHUB_CONTEXT" > target/build-context.json
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+
+      ## Attach the target directory for use in Sonar analysis
+      - name: Attach Build Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: target
+          path: |
+            **/target/
+            !**/target/**/*.jar
+            !**/target/failsafe-reports/**/*
+            !**/target/surefire-reports/**/*
+
+      - name: Save Docker Image Files
+        run: |
           docker images
           docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
           docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
@@ -63,6 +153,45 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set Image Tag Env
+        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build UI
+        working-directory: ui
+        run: |
+          npm ci --omit=dev
+          export BACKEND_URL=http://example
+          export CONSOLE_METRICS_PROMETHEUS_URL=http://example
+          export NEXTAUTH_SECRET=examplesecret
+          export LOG_LEVEL=info
+          export CONSOLE_MODE=read-only
+          npm run build
+
+      - name: Build UI Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ui/
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          push: false
+          tags: |
+            streamshub/console-ui:${{ env.PROJECT_VERSION }}
+
+      - name: Save UI Image File
+        run: docker save -o console-ui-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-ui:${{ env.PROJECT_VERSION }}
+
+      - name: Archive UI Image file
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamshub/console-ui:${{ env.PROJECT_VERSION }}
+          path: console-ui-${{ env.PROJECT_VERSION }}.tar.gz
 
   call-minikube-deployment:
     uses: ./.github/workflows/minikube-deployment.yml
