@@ -1,7 +1,10 @@
 name: Build
-
 on:
+  push:
+    branches: [ 'main' ]
   pull_request:
+    branches: [ 'main' ]
+    types: [ opened, reopened, synchronize ]
 
 jobs:
   build-api:
@@ -60,11 +63,6 @@ jobs:
             -Dquarkus.package.write-transformed-bytecode-to-build-output=true \
             -Dquarkus.docker.buildx.platform=linux/amd64,linux/arm64
 
-      - name: Save Docker Image Files
-        run: |
-          docker images
-          curl -X GET localhost:5000/v2/_catalog
-
       - name: Modify CSV Annotation
         run: ./operator/bin/modify-bundle-metadata.sh
 
@@ -78,11 +76,6 @@ jobs:
           file: operator/target/bundle/console-operator/bundle.Dockerfile
           tags: |
             localhost:5000/streamshub/console-operator-bundle:${{ env.PROJECT_VERSION }}
-
-      - name: Save Docker Image Files
-        run: |
-          docker images
-          curl -X GET localhost:5000/v2/_catalog
 
       - name: Build Operator Catalog
         run: |
@@ -102,11 +95,6 @@ jobs:
           file: operator/target/catalog.Dockerfile
           tags: |
             localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
-
-      - name: Save Docker Image Files
-        run: |
-          docker images
-          curl -X GET localhost:5000/v2/_catalog
 
       - name: Archive Results
         uses: actions/upload-artifact@v4
@@ -134,13 +122,13 @@ jobs:
             !**/target/failsafe-reports/**/*
             !**/target/surefire-reports/**/*
 
-      - name: Save Docker Image Files
+      - name: Save Operator Images
         run: |
           docker images
           docker save -o console-operator-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator:${{ env.PROJECT_VERSION }}
           docker save -o console-operator-catalog-${{ env.PROJECT_VERSION }}.tar localhost:5000/streamshub/console-operator-catalog:${{ env.PROJECT_VERSION }}
 
-      - name: Archive UI Image file
+      - name: Archive Operator Images
         uses: actions/upload-artifact@v4
         with:
           name: operator-images
@@ -182,16 +170,7 @@ jobs:
           provenance: false
           push: false
           tags: |
-            streamshub/console-ui:${{ env.PROJECT_VERSION }}
-
-      - name: Save UI Image File
-        run: docker save -o console-ui-${{ env.PROJECT_VERSION }}.tar.gz streamshub/console-ui:${{ env.PROJECT_VERSION }}
-
-      - name: Archive UI Image file
-        uses: actions/upload-artifact@v4
-        with:
-          name: streamshub/console-ui:${{ env.PROJECT_VERSION }}
-          path: console-ui-${{ env.PROJECT_VERSION }}.tar.gz
+            localhost:5000/streamshub/console-ui:${{ env.PROJECT_VERSION }}
 
   call-minikube-deployment:
     uses: ./.github/workflows/minikube-deployment.yml
