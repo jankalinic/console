@@ -2,11 +2,9 @@ name: Build
 on:
   push:
     branches:
-      - 'main'
       - 'special'
   pull_request:
     branches:
-      - 'main'
       - 'special'
       - 'systemtests'
     types: [ opened, reopened, synchronize ]
