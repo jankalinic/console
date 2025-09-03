@@ -61,7 +61,7 @@ jobs:
           COMMENT: ${{ github.event.comment.body }}
         run: |
           # Strip the command and get only flags
-          PARAMS=$(echo "$COMMENT" | sed 's/@streamshub-bot run tests//')
+          PARAMS=$(echo "$COMMENT" | sed 's/@streamshub-bot test//')
           echo "PARAMS=$PARAMS" >> $GITHUB_ENV
           
           # Set defaults
