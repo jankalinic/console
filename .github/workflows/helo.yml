@@ -5,8 +5,12 @@ on:
     types: [created]
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
+  helo:
+    runs-on: ubuntu-24.04
     steps:
       - name: Show event JSON
-        run: cat $GITHUB_EVENT_PATH
+        run: |
+          echo "Event path: $GITHUB_EVENT_PATH"
+          cat $GITHUB_EVENT_PATH
+          echo "--- Environment ---"
+          env | sort
