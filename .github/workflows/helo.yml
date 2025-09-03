@@ -5,9 +5,13 @@ on:
     types: [created]
 
 jobs:
-  say-hello:
-    if: github.event.issue.pull_request != null && github.event.pull_request.base.ref == 'main'
+  pr_commented:
+    # This job only runs for pull request comments
+    name: PR comment
+    if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
-      - name: Print hello
-        run: echo "hello world"
+      - run: |
+          echo A comment on PR $NUMBER
+        env:
+          NUMBER: ${{ github.event.issue.number }}
