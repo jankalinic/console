@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  helo:
+  MyHelloJob:
     runs-on: ubuntu-24.04
     steps:
       - name: Show event JSON
@@ -14,3 +14,16 @@ jobs:
           cat $GITHUB_EVENT_PATH
           echo "--- Environment ---"
           env | sort
+
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@latest
+        with:
+          cpus: 2
+          memory: 8g
+          addons: registry,ingress,ingress-dns
+          insecure-registry: 'localhost:5000,10.0.0.0/24'
+          start-args: '--extra-config=kubeadm.ignore-preflight-errors=SystemVerification --extra-config=apiserver.authorization-mode=RBAC,Node'
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
