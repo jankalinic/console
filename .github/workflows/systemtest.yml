@@ -1,0 +1,17 @@
+name: PR Comment Listener
+
+on:
+  issue_comment:
+    types: [created]  # triggers when a comment is created
+
+jobs:
+  log-job-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show PR comment info
+        env:
+          COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          echo "Commented by: $COMMENTER"
+          echo "Comment body: $COMMENT_BODY"
