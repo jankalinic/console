@@ -1,4 +1,4 @@
-name: Run System Tests
+name: Run STs
 permissions:
   contents: read
 
