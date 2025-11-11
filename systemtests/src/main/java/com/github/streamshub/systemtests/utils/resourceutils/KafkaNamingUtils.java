@@ -60,4 +60,8 @@ public class KafkaNamingUtils {
     public static String consumerGroupName(String topicName) {
         return topicName + "-consumer-group";
     }
+
+    public static String kafkaConnectName(String kafkaName) {
+        return kafkaName + "-connect";
+    }
 }

@@ -8,6 +8,7 @@ import com.github.streamshub.systemtests.utils.Utils;
 import com.github.streamshub.systemtests.utils.WaitUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaNamingUtils;
+import com.github.streamshub.systemtests.utils.resourceutils.KafkaUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -15,11 +16,15 @@ import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.utils.TestFrameUtils;
 import io.strimzi.api.ResourceAnnotations;
 import io.strimzi.api.ResourceLabels;
+import io.strimzi.api.kafka.model.common.CertSecretSourceBuilder;
 import io.strimzi.api.kafka.model.common.template.ContainerEnvVarBuilder;
+import io.strimzi.api.kafka.model.connect.KafkaConnect;
+import io.strimzi.api.kafka.model.connect.KafkaConnectBuilder;
+import io.strimzi.api.kafka.model.connect.KafkaConnectResources;
 import io.strimzi.api.kafka.model.kafka.Kafka;
 import io.strimzi.api.kafka.model.kafka.KafkaBuilder;
+import io.strimzi.api.kafka.model.kafka.KafkaResources;
 import io.strimzi.api.kafka.model.kafka.listener.GenericKafkaListenerBuilder;
-import io.strimzi.api.kafka.model.kafka.listener.GenericKafkaListenerConfigurationBrokerBuilder;
 import io.strimzi.api.kafka.model.kafka.listener.KafkaListenerType;
 import io.strimzi.api.kafka.model.nodepool.KafkaNodePool;
 import io.strimzi.api.kafka.model.nodepool.KafkaNodePoolBuilder;
@@ -272,38 +277,20 @@ public class KafkaSetup {
                         .withTls(false)
                         .build())
                     .addToListeners(new GenericKafkaListenerBuilder()
-                        .withName(Constants.SCRAMSHA_PLAIN_LISTENER_NAME)
-                        .withPort(9095)
-                        .withType(KafkaListenerType.INTERNAL)
-                        .withTls(false)
-                        .withNewKafkaListenerAuthenticationScramSha512Auth()
-                        .endKafkaListenerAuthenticationScramSha512Auth()
-                        .build())
-                    .addToListeners(new GenericKafkaListenerBuilder()
                         .withName(Constants.SECURE_LISTENER_NAME)
                         .withPort(9093)
                         .withTls(true)
                         .withType(ClusterUtils.isOcp() ? KafkaListenerType.ROUTE : KafkaListenerType.INGRESS)
                         .withNewKafkaListenerAuthenticationScramSha512Auth()
                         .endKafkaListenerAuthenticationScramSha512Auth()
-                        .withNewConfiguration()
-                            .withNewBootstrap()
-                                .withHost(String.join(".", "bootstrap", hashedNamespace, clusterName, ClusterUtils.getClusterDomain()))
-                            .endBootstrap()
-                            .withBrokers(
-                                new GenericKafkaListenerConfigurationBrokerBuilder()
-                                    .withBroker(0)
-                                    .withHost(String.join(".", "broker-0", hashedNamespace, clusterName, ClusterUtils.getClusterDomain()))
-                                .build(),
-                                new GenericKafkaListenerConfigurationBrokerBuilder()
-                                    .withBroker(1)
-                                    .withHost(String.join(".", "broker-1", hashedNamespace, clusterName, ClusterUtils.getClusterDomain()))
-                                .build(),
-                                new GenericKafkaListenerConfigurationBrokerBuilder()
-                                    .withBroker(2)
-                                    .withHost(String.join(".", "broker-2", hashedNamespace, clusterName, ClusterUtils.getClusterDomain()))
-                                .build())
-                        .endConfiguration()
+                        .build())
+                    .addToListeners(new GenericKafkaListenerBuilder()
+                        .withName(Constants.SCRAMSHA_PLAIN_LISTENER_NAME)
+                        .withPort(9095)
+                        .withType(KafkaListenerType.INTERNAL)
+                        .withTls(false)
+                        .withNewKafkaListenerAuthenticationScramSha512Auth()
+                        .endKafkaListenerAuthenticationScramSha512Auth()
                         .build())
                     .withNewJmxPrometheusExporterMetricsConfig()
                         .withNewValueFrom()
@@ -313,5 +300,47 @@ public class KafkaSetup {
                 .endKafka()
             .endSpec()
             .build();
+    }
+
+    public static void setupDefaultConnectIfNeeded(String namespace, String connectName, String kafkaName, String kafkauser, int replicas) {
+        LOGGER.info("Setup test KafkaConnect {}/{} ", namespace, connectName);
+        if (ResourceUtils.getKubeResource(KafkaConnect.class, namespace, connectName) == null) {
+            KubeResourceManager.get().createOrUpdateResourceWithWait(defaultKafkaConnect(namespace, connectName, kafkaName, kafkauser, replicas).build());
+        }
+    }
+
+    private static KafkaConnectBuilder defaultKafkaConnect(String namespace, String connectName, String kafkaName, String kafkauser, int replicas) {
+        return new KafkaConnectBuilder()
+            .withNewMetadata()
+                .withName(connectName)
+                .withNamespace(namespace)
+            .endMetadata()
+            .editOrNewSpec()
+                .withVersion(Environment.ST_KAFKA_VERSION)
+                .withNewKafkaClientAuthenticationScramSha512()
+                    .withUsername(kafkauser)
+                    .withNewPasswordSecret()
+                        .withPassword("password")
+                        .withSecretName(kafkauser)
+                    .endPasswordSecret()
+                .endKafkaClientAuthenticationScramSha512()
+                .withBootstrapServers(KafkaUtils.getSecureBootstrapServiceName(kafkaName) + "-" + namespace + "." + ClusterUtils.getClusterDomain() + ":443")
+                .withReplicas(replicas)
+                .withNewTls()
+                    .withTrustedCertificates(
+                        new CertSecretSourceBuilder()
+                            .withSecretName(KafkaResources.clusterCaCertificateSecretName(kafkaName))
+                            .withCertificate("ca.crt")
+                            .build()
+                    )
+                .endTls()
+                .addToConfig("group.id", KafkaConnectResources.componentName(connectName))
+                .addToConfig("offset.storage.topic", KafkaConnectResources.configStorageTopicOffsets(connectName))
+                .addToConfig("config.storage.topic", KafkaConnectResources.configMapName(connectName))
+                .addToConfig("status.storage.topic", KafkaConnectResources.configStorageTopicStatus(connectName))
+                .addToConfig("config.storage.replication.factor", "-1")
+                .addToConfig("offset.storage.replication.factor", "-1")
+                .addToConfig("status.storage.replication.factor", "-1")
+            .endSpec();
     }
 }

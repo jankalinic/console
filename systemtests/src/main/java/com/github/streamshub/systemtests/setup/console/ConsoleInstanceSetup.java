@@ -69,4 +69,58 @@ public class ConsoleInstanceSetup {
 
         return builder.build();
     }
+
+    public static ConsoleBuilder getDefaultConsoleInstanceBuilder(String namespaceName, String instanceName, String kafkaName, String kafkaUserName) {
+        ConsoleBuilder builder = new ConsoleBuilder()
+            .withMetadata(new ObjectMetaBuilder()
+                .withName(instanceName)
+                .withNamespace(namespaceName)
+                .build())
+            .withSpec(new ConsoleSpecBuilder()
+                .withHostname(instanceName + "." + ClusterUtils.getClusterDomain())
+                .withKafkaClusters(
+                    new KafkaClusterBuilder()
+                        .withId(kafkaName)
+                        .withName(kafkaName)
+                        .withListener(Constants.SECURE_LISTENER_NAME)
+                        .withNamespace(namespaceName)
+                        .withNewCredentials()
+                            .withNewKafkaUser()
+                                .withName(kafkaUserName)
+                            .endKafkaUser()
+                        .endCredentials()
+                    .build()
+                    )
+                .build());
+
+        if (!Environment.CONSOLE_API_IMAGE.isEmpty()) {
+            builder = builder.editSpec()
+                .withNewImages()
+                    .withApi(Environment.CONSOLE_API_IMAGE)
+                .endImages()
+            .endSpec();
+        }
+
+        if (!Environment.CONSOLE_UI_IMAGE.isEmpty()) {
+            builder = builder.editSpec()
+                .editImages()
+                    .withUi(Environment.CONSOLE_UI_IMAGE)
+                .endImages()
+            .endSpec();
+        }
+
+        return builder;
+    }
+
+    public static ConsoleBuilder getDefaultConnectConsoleInstance(String namespaceName, String instanceName, String kafkaName, String kafkaUserName, String connectName) {
+            return getDefaultConsoleInstanceBuilder(namespaceName, instanceName, kafkaName, kafkaUserName)
+                .editSpec()
+                .addNewKafkaConnectCluster()
+                    .addToKafkaClusters( namespaceName + "/" + kafkaName)
+                .withName(connectName)
+                .withNamespace(namespaceName)
+                .withUrl("http://" + connectName + "-connect-api:8083/")
+                .endKafkaConnectCluster()
+                .endSpec();
+    }
 }

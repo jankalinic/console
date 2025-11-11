@@ -84,6 +84,7 @@ public class Constants {
      * Listeners
      */
     public static final String PLAIN_LISTENER_NAME = "plain";
+    public static final String TLS_LISTENER_NAME = "tls";
     public static final String SCRAMSHA_PLAIN_LISTENER_NAME = "scramplain";
     public static final String SECURE_LISTENER_NAME = "secure";
 

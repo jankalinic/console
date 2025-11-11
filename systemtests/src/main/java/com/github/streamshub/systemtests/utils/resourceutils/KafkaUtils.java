@@ -39,6 +39,10 @@ public class KafkaUtils {
         return clusterName + "-kafka-bootstrap";
     }
 
+    public static String getSecureBootstrapServiceName(String clusterName) {
+        return clusterName + "-kafka-secure-bootstrap";
+    }
+
     /**
      * Adds an annotation to a Kafka resource in the specified namespace.
      *
