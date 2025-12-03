@@ -64,7 +64,54 @@ public class TopicST extends AbstractST {
     private static final int UNDER_REPLICATED_TOPICS_COUNT = 3;
     private static final int UNAVAILABLE_TOPICS_COUNT = 2;
     private static final int TOTAL_TOPICS_COUNT = TOTAL_REPLICATED_TOPICS_COUNT + UNDER_REPLICATED_TOPICS_COUNT + UNAVAILABLE_TOPICS_COUNT;
-    
+
+
+    @Test
+    @Order(Order.DEFAULT)
+    @TestBucket(VARIOUS_TOPIC_TYPES_BUCKET)
+    void testCreateDeleteTopic() {
+        LOGGER.info("Verify no topics are displayed");
+        TopicChecks.checkOverviewPageTopicState(tcc, tcc.kafkaName(), 0, 0, 0, 0, 0);
+        TopicChecks.checkTopicsPageTopicState(tcc, tcc.kafkaName(), 0, 0, 0, 0);
+
+
+
+    }
+
+    @Test
+    @Order(Order.DEFAULT)
+    @TestBucket(VARIOUS_TOPIC_TYPES_BUCKET)
+    void testEditTopics() {
+        LOGGER.info("Verify topics are displayed");
+        TopicChecks.checkOverviewPageTopicState(tcc, tcc.kafkaName(), TOTAL_TOPICS_COUNT, TOTAL_TOPICS_COUNT, TOTAL_REPLICATED_TOPICS_COUNT, UNDER_REPLICATED_TOPICS_COUNT, UNAVAILABLE_TOPICS_COUNT);
+        TopicChecks.checkTopicsPageTopicState(tcc, tcc.kafkaName(), TOTAL_TOPICS_COUNT, TOTAL_REPLICATED_TOPICS_COUNT, UNDER_REPLICATED_TOPICS_COUNT, UNAVAILABLE_TOPICS_COUNT);
+        LOGGER.info("Verify pagination on topics page");
+
+        // Create topics
+        final String simpleTopicName = "new-simple-topic";
+        final int simpleTopicPartitions = 2;
+        final int simpleTopicReplicas = 2;
+
+        final String optionsTopicName = "new-options-topic";
+        final int optionsTopicPartitions = 1;
+        final int optionsTopicReplicas = 3;
+        final int minIsr = 2;
+
+        // Create simple topic
+        tcc.page().navigate(PwPageUrls.getTopicsPage(tcc, tcc.kafkaName()));
+        // Click on create new topic
+        // Set topic name
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NAME_INPUT, simpleTopicName);
+        // Set topic partitions
+        // Set topic replicas
+        // Path 1: Review and finish
+        // Verify values, no advanced options specified
+
+        // Create topic with options
+        // Path 2: Next(options)
+        // Path 2: Next(review)
+    }
+
     /**
      * Tests pagination behavior on the Topics page when handling a large set of topics.
      *

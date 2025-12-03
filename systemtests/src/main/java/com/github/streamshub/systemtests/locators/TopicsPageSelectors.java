@@ -250,4 +250,199 @@ public class TopicsPageSelectors {
         .withChild()
         .withElementDiv().withComponentPagination().withSubComponentNavControl().nth(2)
         .build();
+
+    // Create topic selectors
+    public static final String TPS_CREATE_TOPIC_PAGE = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentWizard().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentOuterWrap().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentInnerWrap().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentMain().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentMainBody()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_FORM = new CssBuilder(TPS_CREATE_TOPIC_PAGE)
+        .withChild()
+        .withElementForm().withComponentForm()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_OPTION_TABLE = new CssBuilder(TPS_CREATE_TOPIC_PAGE)
+        .withChild()
+        .withElementTable().withComponentTable()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_NAME_INPUT  = new CssBuilder(TPS_CREATE_TOPIC_FORM)
+        .withChild()
+        .withElementSection().withComponentForm().withSubComponentSection().nth(1).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_PARTITIONS_INPUT = new CssBuilder(TPS_CREATE_TOPIC_FORM)
+        .withChild()
+        .withElementSection().withComponentForm().withSubComponentSection().nth(2).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementDiv().withComponentNumberInput().withChild()
+        .withElementDiv().withComponentInputGroup().withChild()
+        .withElementDiv().withComponentInputGroup().withSubComponentItem().nth(2).withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_REPLICAS_INPUT = new CssBuilder(TPS_CREATE_TOPIC_FORM)
+        .withChild()
+        .withElementSection().withComponentForm().withSubComponentSection().nth(3).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementDiv().withComponentNumberInput().withChild()
+        .withElementDiv().withComponentInputGroup().withChild()
+        .withElementDiv().withComponentInputGroup().withSubComponentItem().nth(2).withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_REVIEW_AND_FINISH_BUTTON = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentWizard().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentOuterWrap().withChild()
+        .withElementFooter().withComponentWizard().withSubComponentFooter().withChild()
+        .withElementButton().withComponentButton().nth(3).withChild()
+        .withElementSpan().withComponentButton().withSubComponentText()
+        .build();
+
+
+    public static final String TPS_CREATE_TOPIC_NEXT_BUTTON = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentWizard().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentOuterWrap().withChild()
+        .withElementFooter().withComponentWizard().withSubComponentFooter().withChild()
+        .withElementButton().withComponentButton().nth(2).withChild()
+        .withElementSpan().withComponentButton().withSubComponentText()
+        .build();
+
+
+    public static final String TPS_CREATE_TOPIC_OPTION_FLUSH_MS_INPUT = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentWizard().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentOuterWrap().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentInnerWrap().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentMain().withChild()
+        .withElementDiv().withComponentWizard().withSubComponentMainBody().withChild()
+        .withElementTable().withComponentTable().withChild()
+        .withElementTbody().withComponentTable().withSubComponentTbody().nth(7).withChild()
+        .withElementTr().withComponentTable().withSubComponentTr().withChild()
+        .withElementTd().withComponentTable().withSubComponentTd().nth(2).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_OPTION_MIN_ISR_INPUT = new CssBuilder(TPS_CREATE_TOPIC_OPTION_TABLE)
+        .withChild()
+        .withElementTbody().withComponentTable().withSubComponentTbody().nth(4).withChild()
+        .withElementTr().withComponentTable().withSubComponentTr().withChild()
+        .withElementTd().withComponentTable().withSubComponentTd().nth(2).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static String getTopicRowOptionButton(int nthRow) {
+        return new CssBuilder(getTableRowItems(nthRow))
+            .withChild()
+            .withElementButton().withComponentMenuToggle()
+        .build();
+    }
+
+    public static final String TPS_EDIT_TOPIC_BUTTON = new CssBuilder(CssSelectors.PAGES_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentPage().withSubComponentMainBody().withChild()
+        .withElementDiv().withComponentScrollOuterWrapper().withChild()
+        .withElementDiv().withComponentMenu().withChild()
+        .withElementDiv().withComponentMenu().withSubComponentContent().withChild()
+        .withElementUl().withComponentMenu().withSubComponentList().withChild()
+        .withElementLi().withComponentMenu().withSubComponentListItem().nth(1).withChild()
+        .withElementButton().withComponentMenu().withSubComponentItem()
+        .build();
+
+    public static final String TPS_DELETE_TOPIC_BUTTON = new CssBuilder(CssSelectors.PAGES_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentPage().withSubComponentMainBody().withChild()
+        .withElementDiv().withComponentScrollOuterWrapper().withChild()
+        .withElementDiv().withComponentMenu().withChild()
+        .withElementDiv().withComponentMenu().withSubComponentContent().withChild()
+        .withElementUl().withComponentMenu().withSubComponentList().withChild()
+        .withElementLi().withComponentMenu().withSubComponentListItem().nth(2).withChild()
+        .withElementButton().withComponentMenu().withSubComponentItem()
+        .build();
+
+
+    public static final String TPS_DELETE_TOPIC_MODAL_TITLE = new CssBuilder(CssSelectors.PAGES_POPUP_MODAL_HEADER)
+        .withChild()
+        .withElementH1().withComponentModalBox().withSubComponentTitle().withChild()
+        .withElementSpan().withComponentModalBox().withSubComponentTitleText()
+        .build();
+
+
+    public static final String TPS_DELETE_TOPIC_MODAL_INPUT_NAME = new CssBuilder(CssSelectors.PAGES_POPUP_MODAL_BODY)
+        .withChild()
+        .withChild()
+        .withElementForm().withComponentForm().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
+
+    public static final String TPS_CONFIRM_MODAL_DELETE_TOPIC_BUTTON = new CssBuilder(CssSelectors.PAGES_MODAL_CONFIRM_BUTTON)
+        .withChild()
+        .withElementSpan().withComponentButton().withSubComponentText()
+        .build();
+
+
+    // Edit page
+    public static final String TPS_TOPIC_OPTION_TABLE = new CssBuilder(CssSelectors.PAGES_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentPage().withSubComponentMainBody().withChild()
+        .withElementDiv().withComponentScrollOuterWrapper().withChild()
+        .withElementDiv().withComponentScrollInnerWrapper().withChild()
+        .withElementTable().withComponentTable().withChild()
+        .withElementTbody().withComponentTable().withSubComponentTbody()
+        .build();
+
+    public static String getTopicRowEditButton(int nthRow) {
+        return CssBuilder.joinLocators(new CssBuilder(TPS_TOPIC_OPTION_TABLE).nth(nthRow).withChild().build(),
+            TPS_TOPIC_OPTION_TABLE_EDIT_BUTTON_AD);
+    }
+
+    public static final String TPS_TOPIC_OPTION_TABLE_EDIT_BUTTON_AD = new CssBuilder()
+        .withElementTr().withComponentTable().withSubComponentTr().withChild()
+        .withElementTd().withComponentTable().withSubComponentTd().nth(3).withChild()
+        .withElementButton().withComponentButton()
+        .build();
+
+    public static final String TPS_TOPIC_OPTION_TABLE_EDIT_CONFIRM_AD = new CssBuilder(TPS_TOPIC_OPTION_TABLE)
+        .withChild()
+        .withElementTr().withComponentTable().withSubComponentTr().withChild()
+        .withElementTd().withComponentTable().withSubComponentTd().nth(3).withChild()
+        .withElementDiv().withComponentInlineEdit().withChild()
+        .withElementDiv().withComponentInlineEdit().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentInlineEdit().withSubComponentAction().nth(1).withChild()
+        .withElementButton().withComponentButton()
+        .build();
+
+    public static final String TPS_TOPIC_OPTION_TABLE_EDIT_INPUT = new CssBuilder(TPS_TOPIC_OPTION_TABLE)
+        .withChild()
+        .withElementTr().withComponentTable().withSubComponentTr().withChild()
+        .withElementTd().withComponentTable().withSubComponentTd().nth(2).withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
+        .withElementSpan().withComponentFormControl().withChild()
+        .withElementInput()
+        .build();
 }
