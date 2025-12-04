@@ -76,6 +76,10 @@ public class Environment {
         return CONSOLE_INSTALL_TYPE.equals(InstallType.Olm);
     }
 
+    public static boolean isYamlInstall() {
+        return CONSOLE_INSTALL_TYPE.equals(InstallType.Yaml);
+    }
+
     public static boolean isTestClientsPullSecretPresent() {
         return !Environment.TEST_CLIENTS_PULL_SECRET.isEmpty();
     }

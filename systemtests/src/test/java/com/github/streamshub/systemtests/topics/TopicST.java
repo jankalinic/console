@@ -5,9 +5,11 @@ import com.github.streamshub.systemtests.MessageStore;
 import com.github.streamshub.systemtests.TestCaseConfig;
 import com.github.streamshub.systemtests.annotations.SetupTestBucket;
 import com.github.streamshub.systemtests.annotations.TestBucket;
+import com.github.streamshub.systemtests.annotations.YamlInstallOnly;
 import com.github.streamshub.systemtests.clients.KafkaClients;
 import com.github.streamshub.systemtests.clients.KafkaClientsBuilder;
 import com.github.streamshub.systemtests.constants.Constants;
+import com.github.streamshub.systemtests.constants.Labels;
 import com.github.streamshub.systemtests.constants.TestTags;
 import com.github.streamshub.systemtests.enums.FilterType;
 import com.github.streamshub.systemtests.enums.TopicStatus;
@@ -21,16 +23,20 @@ import com.github.streamshub.systemtests.setup.strimzi.KafkaSetup;
 import com.github.streamshub.systemtests.utils.WaitUtils;
 import com.github.streamshub.systemtests.utils.playwright.PwPageUrls;
 import com.github.streamshub.systemtests.utils.playwright.PwUtils;
+import com.github.streamshub.systemtests.utils.resourceutils.ConsoleUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaClientsUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaCmdUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaNamingUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaTopicUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.KafkaUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.NamespaceUtils;
+import com.github.streamshub.systemtests.utils.resourceutils.PodUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceUtils;
 import com.github.streamshub.systemtests.utils.testchecks.TopicChecks;
 import com.github.streamshub.systemtests.utils.testutils.TopicsTestUtils;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.strimzi.api.kafka.model.topic.KafkaTopic;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
@@ -44,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github.streamshub.systemtests.utils.Utils.getTestCaseConfig;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -65,51 +72,88 @@ public class TopicST extends AbstractST {
     private static final int UNAVAILABLE_TOPICS_COUNT = 2;
     private static final int TOTAL_TOPICS_COUNT = TOTAL_REPLICATED_TOPICS_COUNT + UNDER_REPLICATED_TOPICS_COUNT + UNAVAILABLE_TOPICS_COUNT;
 
-
+    // Note: Test only available for YAML because of OLM service account restrictions - this might change in the future
     @Test
     @Order(Order.DEFAULT)
-    @TestBucket(VARIOUS_TOPIC_TYPES_BUCKET)
+    @YamlInstallOnly
     void testCreateDeleteTopic() {
         LOGGER.info("Verify no topics are displayed");
         TopicChecks.checkOverviewPageTopicState(tcc, tcc.kafkaName(), 0, 0, 0, 0, 0);
         TopicChecks.checkTopicsPageTopicState(tcc, tcc.kafkaName(), 0, 0, 0, 0);
 
+        // Create topics
+        final String simpleTopicName = "new-simple-topic";
+        final String simpleTopicPartitions = "2";
+        final String simpleTopicReplicas = "2";
 
+        final String optionsTopicName = "new-options-topic";
+        final String optionsTopicPartitions = "1";
+        final String optionsTopicReplicas = "3";
+        final String minIsr = "2";
 
+        // Change env in console to read-write
+        LabelSelector podSelector = Labels.getConsoleInstancePodLabelSelector(ConsoleUtils.getConsoleDeploymentName(tcc.consoleInstanceName()));
+        Map<String, String> consoleSnapshot = PodUtils.getPodSnapshotBySelector(tcc.namespace(), podSelector);
+        Deployment consoleDep = ResourceUtils.getKubeResource(Deployment.class, tcc.namespace(), ConsoleUtils.getConsoleDeploymentName(tcc.consoleInstanceName())).edit()
+                .editSpec()
+                    .editTemplate()
+                        .editSpec()
+                            .editMatchingContainer(c -> Constants.CONSOLE_UI_CONTAINER_NAME.equals(c.getName()))
+                                .editMatchingEnv(env -> Constants.CONSOLE_MODE_ENV.equals(env.getName()))
+                                    .withValue(Constants.CONSOLE_MODE_RW)
+                                .endEnv()
+                            .endContainer()
+                        .endSpec()
+                    .endTemplate()
+                .endSpec()
+            .build();
+
+        KubeResourceManager.get().createOrUpdateResourceWithWait(consoleDep);
+        WaitUtils.waitForComponentPodsToRoll(tcc.namespace(), podSelector, consoleSnapshot);
+
+        // Create simple topic
+        tcc.page().navigate(PwPageUrls.getTopicsPage(tcc, tcc.kafkaName()));
+        // Click on create new topic
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_BUTTON);
+        // Set topic name
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NAME_INPUT, simpleTopicName);
+        // Set topic partitions
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_PARTITIONS_INPUT, simpleTopicPartitions);
+        // Set topic replicas
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_REPLICAS_INPUT, simpleTopicReplicas);
+        // Path 1: Review and finish
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_REVIEW_AND_FINISH_BUTTON);
+        // Verify values, no advanced options specified
+        PwUtils.waitForContainsText(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_ADDITIONAL_OPTIONS_TEXT, MessageStore.createTopicNoAdvancedOptions(), true);
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_CONFIRM_BUTTON);
+        // Create topic with options
+        tcc.page().navigate(PwPageUrls.getTopicsPage(tcc, tcc.kafkaName()));
+        // Click on create new topic
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_BUTTON);
+        // Set topic name
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NAME_INPUT, optionsTopicName);
+        // Set topic partitions
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_PARTITIONS_INPUT, optionsTopicPartitions);
+        // Set topic replicas
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_REPLICAS_INPUT, optionsTopicReplicas);
+        // Path 2: Next(options)
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NEXT_BUTTON);
+        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_OPTION_MIN_ISR_INPUT, minIsr);
+        // Path 2: Next(review)
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NEXT_BUTTON);
+        PwUtils.waitForContainsText(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_ADDITIONAL_OPTIONS_TEXT, "min.isr.replicas", true);
+        PwUtils.waitForLocatorAndClick(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_CONFIRM_BUTTON);
     }
 
     @Test
     @Order(Order.DEFAULT)
-    @TestBucket(VARIOUS_TOPIC_TYPES_BUCKET)
     void testEditTopics() {
         LOGGER.info("Verify topics are displayed");
         TopicChecks.checkOverviewPageTopicState(tcc, tcc.kafkaName(), TOTAL_TOPICS_COUNT, TOTAL_TOPICS_COUNT, TOTAL_REPLICATED_TOPICS_COUNT, UNDER_REPLICATED_TOPICS_COUNT, UNAVAILABLE_TOPICS_COUNT);
         TopicChecks.checkTopicsPageTopicState(tcc, tcc.kafkaName(), TOTAL_TOPICS_COUNT, TOTAL_REPLICATED_TOPICS_COUNT, UNDER_REPLICATED_TOPICS_COUNT, UNAVAILABLE_TOPICS_COUNT);
         LOGGER.info("Verify pagination on topics page");
 
-        // Create topics
-        final String simpleTopicName = "new-simple-topic";
-        final int simpleTopicPartitions = 2;
-        final int simpleTopicReplicas = 2;
 
-        final String optionsTopicName = "new-options-topic";
-        final int optionsTopicPartitions = 1;
-        final int optionsTopicReplicas = 3;
-        final int minIsr = 2;
-
-        // Create simple topic
-        tcc.page().navigate(PwPageUrls.getTopicsPage(tcc, tcc.kafkaName()));
-        // Click on create new topic
-        // Set topic name
-        PwUtils.waitForLocatorAndFill(tcc, TopicsPageSelectors.TPS_CREATE_TOPIC_NAME_INPUT, simpleTopicName);
-        // Set topic partitions
-        // Set topic replicas
-        // Path 1: Review and finish
-        // Verify values, no advanced options specified
-
-        // Create topic with options
-        // Path 2: Next(options)
-        // Path 2: Next(review)
     }
 
     /**

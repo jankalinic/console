@@ -54,6 +54,7 @@ public class MessageStore {
     static final String HOMEPAGE = "homepage";
     static final String OVERVIEW = "overview";
     static final String CLUSTER_CARD = "ClusterCard";
+    static final String CREATE_TOPIC = "CreateTopic";
     static final String PRODUCT = "product";
     static final String BRAND = "brand";
     static final String RECONCILIATION = "reconciliation";
@@ -118,5 +119,8 @@ public class MessageStore {
         return jsonResources.get(MESSAGE_BROWSER).get("no_data_title").textValue();
     }
 
-
+    // Create topic
+    public static String createTopicNoAdvancedOptions() {
+        return jsonResources.get(CREATE_TOPIC).get("no_advanced_options_specified").textValue();
+    }
 }

@@ -3,6 +3,7 @@ package com.github.streamshub.systemtests.constants;
 public class Constants {
     public static final String NGINX_INGRESS_NAMESPACE = "ingress-nginx";
 
+
     private Constants() {}
 
     // --------------------------------
@@ -10,6 +11,10 @@ public class Constants {
     // --------------------------------
     public static final int MAX_ACTION_RETRIES = 10;
     public static final int LOGOUT_RETRIES = 5;
+
+    public static final String CONSOLE_UI_CONTAINER_NAME = "console-ui";
+    public static final String CONSOLE_MODE_ENV = "CONSOLE_MODE";
+    public static final String CONSOLE_MODE_RW = "read-write";
     /**
      * Cluster
      */

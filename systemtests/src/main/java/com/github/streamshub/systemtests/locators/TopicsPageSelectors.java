@@ -252,6 +252,22 @@ public class TopicsPageSelectors {
         .build();
 
     // Create topic selectors
+    public static final String TPS_CREATE_TOPIC_BUTTON = new CssBuilder(CssSelectors.PAGES_CONTENT)
+        .withChild()
+        .withElementDiv().withComponentPage().withSubComponentMainBody().withChild()
+        .withElementDiv().withComponentScrollOuterWrapper().withChild()
+        .withElementDiv().withComponentToolbar().withChild()
+        .withElementDiv().withComponentToolbar().withSubComponentContent().nth(1).withChild()
+        .withElementDiv().withComponentToolbar().withSubComponentContentSection().withChild()
+        .withElementDiv().withComponentToolbar().withSubComponentItem().nth(3).withChild()
+        .withElementDiv().withComponentOverflowMenu().withChild()
+        .withElementDiv().withComponentOverflowMenu().withSubComponentContent().withChild()
+        .withElementDiv().withComponentOverflowMenu().withSubComponentGroup().withChild()
+        .withElementDiv().withComponentOverflowMenu().withSubComponentItem().withChild()
+        .withElementButton().withComponentButton().withChild()
+        .withElementSpan().withComponentButton().withSubComponentText()
+        .build();
+
     public static final String TPS_CREATE_TOPIC_PAGE = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
         .withChild()
         .withElementDiv().withComponentWizard().withChild()
@@ -322,6 +338,9 @@ public class TopicsPageSelectors {
         .withElementButton().withComponentButton().nth(2).withChild()
         .withElementSpan().withComponentButton().withSubComponentText()
         .build();
+
+
+    public static final String TPS_CREATE_TOPIC_CONFIRM_BUTTON = TPS_CREATE_TOPIC_NEXT_BUTTON;
 
 
     public static final String TPS_CREATE_TOPIC_OPTION_FLUSH_MS_INPUT = new CssBuilder(CssSelectors.PAGES_MAIN_CONTENT)
@@ -444,5 +463,12 @@ public class TopicsPageSelectors {
         .withElementDiv().withComponentForm().withSubComponentGroupControl().withChild()
         .withElementSpan().withComponentFormControl().withChild()
         .withElementInput()
+        .build();
+
+    public static final String TPS_CREATE_TOPIC_ADDITIONAL_OPTIONS_TEXT = new CssBuilder(TPS_CREATE_TOPIC_PAGE)
+        .withChild()
+        .withElementDiv().withLayoutGrid().withChild()
+        .withElementDiv().withLayoutGrid().withSubComponentItem().nth(5).withChild()
+        .withElementDiv().withComponentContent()
         .build();
 }

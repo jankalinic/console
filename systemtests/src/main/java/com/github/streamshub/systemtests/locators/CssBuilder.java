@@ -165,6 +165,7 @@ public class CssBuilder {
     public CssBuilder withComponentRadio() { return withComponent("radio"); }
     public CssBuilder withComponentWizard() { return withComponent("wizard"); }
     public CssBuilder withComponentInlineEdit() { return withComponent("inline-edit"); }
+    public CssBuilder withComponentOverflowMenu() { return withComponent("overflow-menu"); }
 
     // ----------------
     // Sub-components

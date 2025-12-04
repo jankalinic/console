@@ -21,6 +21,20 @@ public class Labels {
     public static final String COLLECT_ST_LOGS = "streamshub-st";
     public static final String APP = "app";
 
+    public static final String K8S_LABEL_PREFIX = "app.kubernetes.io/";
+
+    public static final String K8S_LABEL_NAME = K8S_LABEL_PREFIX + "name";
+    public static final String K8S_LABEL_MANAGED_BY = K8S_LABEL_PREFIX + "managed-by";
+    public static final String K8S_LABEL_INSTANCE = K8S_LABEL_PREFIX + "instance";
+
+    // ------------
+    // Console
+    // ------------
+    public static LabelSelector getConsoleInstancePodLabelSelector(String deploymentName) {
+        return new LabelSelectorBuilder()
+            .addToMatchLabels(K8S_LABEL_INSTANCE, deploymentName)
+            .build();
+    }
 
     // ------------
     // Strimzi

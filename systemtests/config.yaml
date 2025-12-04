@@ -21,7 +21,7 @@ STRIMZI_OPERATOR_NAME: strimzi-cluster-operator
 # Deployment name of the Console instance
 CONSOLE_DEPLOYMENT_NAME: streamshub-console
 # Install type for Console Operator [OLM; YAML]
-CONSOLE_INSTALL_TYPE: olm
+CONSOLE_INSTALL_TYPE: yaml
 # Kubernetes client type used to execute cmd [oc, kubectl]
 CLIENT_TYPE: kubectl
 # Cluster domain required for k8s clusters except OpenShift.
@@ -46,7 +46,7 @@ STRIMZI_OPERATOR_VERSION: 0.49.0
 # 1. URL - released console-operator.yaml
 # 2. Local path that is relative to the root project dir
 # 3. Local path that is absolute
-CONSOLE_OPERATOR_BUNDLE_URL: https://github.com/streamshub/console/releases/download/0.8.4/streamshub-console-operator.yaml
+CONSOLE_OPERATOR_BUNDLE_URL: https://github.com/streamshub/console/releases/download/0.10.3/streamshub-console-operator.yaml
 # Custom Console Operator image. Overrides default image used in bundle yaml
 CONSOLE_OPERATOR_IMAGE:
 # -------------------------------------------
