@@ -105,12 +105,23 @@ public class ApicurioST extends AbstractST {
 
     private static Stream<Arguments> serializedSchemaScenarios() {
         return Stream.of(
-            Arguments.of(Constants.SERIALIZER_PROTOBUF, Constants.ARTIFACT_TYPE_PROTOBUF, SERIALIZED_SCHEMA_NAME, PROTOBUF_SCHEMA,
-                Constants.ARTIFACT_TYPE_PROTOBUF.toUpperCase(Locale.ROOT), MESSAGE.formatted(Constants.ARTIFACT_TYPE_PROTOBUF), Constants.CONTENT_TYPE_PROTOBUF),
-
-            Arguments.of(null, Constants.ARTIFACT_TYPE_AVRO, AVRO_SCHEMA, SERIALIZED_SCHEMA_NAME,
-                Constants.ARTIFACT_TYPE_AVRO.toUpperCase(Locale.ROOT), MESSAGE.formatted(Constants.ARTIFACT_TYPE_AVRO), Constants.CONTENT_TYPE_JSON)
-            );
+            Arguments.of(
+                Constants.SERIALIZER_PROTOBUF,
+                Constants.ARTIFACT_TYPE_PROTOBUF,
+                SERIALIZED_SCHEMA_NAME,
+                PROTOBUF_SCHEMA,
+                Constants.ARTIFACT_TYPE_PROTOBUF.toUpperCase(Locale.ROOT),
+                MESSAGE.formatted(Constants.ARTIFACT_TYPE_PROTOBUF),
+                Constants.CONTENT_TYPE_PROTOBUF),
+            Arguments.of(
+            null,
+                Constants.ARTIFACT_TYPE_AVRO,
+                SERIALIZED_SCHEMA_NAME,
+                AVRO_SCHEMA,
+                Constants.ARTIFACT_TYPE_AVRO.toUpperCase(Locale.ROOT),
+                MESSAGE.formatted(Constants.ARTIFACT_TYPE_AVRO),
+                Constants.CONTENT_TYPE_JSON)
+        );
     }
 
     /**
@@ -218,11 +229,20 @@ public class ApicurioST extends AbstractST {
 
     private static Stream<Arguments> schemaRawTypes() {
         return Stream.of(
-            Arguments.of(Constants.ARTIFACT_TYPE_JSON, JSON_SCHEMA, Constants.PLAIN_VALUE_TYPE,
-                Constants.ARTIFACT_TYPE_JSON.toUpperCase(Locale.ROOT), MESSAGE.formatted(Constants.ARTIFACT_TYPE_JSON), Constants.CONTENT_TYPE_JSON),
-
-            Arguments.of(Constants.ARTIFACT_TYPE_XML, XML_SCHEMA, Constants.PLAIN_VALUE_TYPE,
-                 Constants.ARTIFACT_TYPE_XML.toUpperCase(Locale.ROOT), XML_MESSAGE, Constants.CONTENT_TYPE_XML)
+            Arguments.of(
+                Constants.ARTIFACT_TYPE_JSON,
+                JSON_SCHEMA,
+                Constants.PLAIN_VALUE_TYPE,
+                Constants.ARTIFACT_TYPE_JSON.toUpperCase(Locale.ROOT),
+                MESSAGE.formatted(Constants.ARTIFACT_TYPE_JSON),
+                Constants.CONTENT_TYPE_JSON),
+            Arguments.of(
+                Constants.ARTIFACT_TYPE_XML,
+                XML_SCHEMA,
+                Constants.PLAIN_VALUE_TYPE,
+                Constants.ARTIFACT_TYPE_XML.toUpperCase(Locale.ROOT),
+                XML_MESSAGE,
+                Constants.CONTENT_TYPE_XML)
         );
     }
 
