@@ -53,17 +53,25 @@ public class ConsoleInstanceSetup {
 
         if (!Environment.CONSOLE_API_IMAGE.isEmpty()) {
             builder = builder.editSpec()
-                .withNewImages()
-                    .withApi(Environment.CONSOLE_API_IMAGE)
-                .endImages()
+                .editOrNewContainers()
+                    .editOrNewApi()
+                        .editOrNewSpec()
+                            .withImage(Environment.CONSOLE_API_IMAGE)
+                        .endSpec()
+                    .endApi()
+                .endContainers()
             .endSpec();
         }
 
         if (!Environment.CONSOLE_UI_IMAGE.isEmpty()) {
             builder = builder.editSpec()
-                .editImages()
-                    .withUi(Environment.CONSOLE_UI_IMAGE)
-                .endImages()
+                .editOrNewContainers()
+                    .editOrNewUi()
+                        .editOrNewSpec()
+                            .withImage(Environment.CONSOLE_UI_IMAGE)
+                        .endSpec()
+                    .endUi()
+                .endContainers()
             .endSpec();
         }
 

@@ -10,11 +10,10 @@ import com.github.streamshub.systemtests.utils.FileUtils;
 import com.github.streamshub.systemtests.utils.Utils;
 import com.github.streamshub.systemtests.utils.WaitUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
-import com.github.streamshub.systemtests.utils.resourceutils.keycloak.KeycloakUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceUtils;
+import com.github.streamshub.systemtests.utils.resourceutils.keycloak.KeycloakUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -243,7 +242,7 @@ public class KeycloakSetup {
         try {
             postgresYamlContent = (Deployment) KubeResourceManager.get().kubeClient().readResourcesFromFile(Path.of(POSTGRES_DEPLOYMENT_FILE_PATH))
                 .stream()
-                .filter(o -> o.getKind().equals(HasMetadata.getKind(Deployment.class)))
+                .filter(o -> o instanceof Deployment)
                 .findFirst()
                 .orElseThrow();
         } catch (IOException e) {

@@ -8,8 +8,8 @@ import com.github.streamshub.systemtests.resourcetypes.KafkaConnectType;
 import com.github.streamshub.systemtests.resourcetypes.KafkaTopicType;
 import com.github.streamshub.systemtests.resourcetypes.KafkaType;
 import com.github.streamshub.systemtests.resourcetypes.KafkaUserType;
-import com.github.streamshub.systemtests.resourcetypes.apicurio.ApicurioRegistry3Type;
 import com.github.streamshub.systemtests.resourcetypes.kroxy.KroxyResourceType;
+import com.github.streamshub.systemtests.resourcetypes.apicurio.ApicurioRegistry3Type;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBinding;
+import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.kroxylicious.kubernetes.api.v1alpha1.KafkaProtocolFilter;
 import io.kroxylicious.kubernetes.api.v1alpha1.KafkaProxy;
 import io.kroxylicious.kubernetes.api.v1alpha1.KafkaProxyIngress;
@@ -184,6 +185,29 @@ public class SetupUtils {
                 crb.getSubjects().forEach(subject -> {
                     LOGGER.info("Setting subject namespace to '{}' in ClusterRoleBinding: {}",
                         targetNamespace, crb.getMetadata().getName());
+                    subject.setNamespace(targetNamespace);
+                });
+            }
+        }
+    }
+
+    /**
+     * Rewrites subject namespaces in a {@link RoleBinding}.
+     *
+     * <p>If the provided resource is a {@link RoleBinding}, this method updates
+     * the namespace of all defined subjects to the given target namespace.
+     * This ensures RBAC bindings reference the correct namespace in
+     * namespace-scoped deployments.</p>
+     *
+     * @param resource        the Kubernetes resource to inspect
+     * @param targetNamespace the namespace to set on all subjects
+     */
+    public static void fixRoleBindingNamespace(HasMetadata resource, String targetNamespace) {
+        if (resource instanceof RoleBinding rb) {
+            if (rb.getSubjects() != null) {
+                rb.getSubjects().forEach(subject -> {
+                    LOGGER.info("Setting subject namespace to '{}' in RoleBinding: {}",
+                            targetNamespace, rb.getMetadata().getName());
                     subject.setNamespace(targetNamespace);
                 });
             }
