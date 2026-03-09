@@ -1,0 +1,142 @@
+# ============================================================
+# 1. CATALOG — points to your image (replaces CatalogSource)
+# ============================================================
+apiVersion: olm.operatorframework.io/v1
+kind: ClusterCatalog
+metadata:
+  name: streamshub-catalog
+spec:
+  source:
+    type: Image
+    image:
+      ref: quay.io/streamshub/console-operator-catalog:0.11
+  availabilityMode: Available
+
+---
+# ============================================================
+# 2. NAMESPACE — where the operator will be installed
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: streamshub-system
+
+---
+# ============================================================
+# 3. SERVICE ACCOUNT — identity used by OLM to install
+# ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: console-installer
+  namespace: streamshub-system
+
+---
+# ============================================================
+# 4. CLUSTER ROLE — scoped exactly to what this operator needs
+#    Derived directly from the operator's own manifest RBAC
+# ============================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: console-installer-role
+rules:
+  # OLM core: manage CRDs the operator ships
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # The operator's own CRD group
+  - apiGroups: ["console.streamshub.github.com"]
+    resources: ["consoles", "consoles/status", "consoles/finalizers"]
+    verbs: ["get", "list", "watch", "patch", "update", "create", "delete"]
+
+  # RBAC resources the operator itself creates at runtime
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Core resources the operator manages
+  - apiGroups: [""]
+    resources: ["serviceaccounts", "services", "configmaps", "secrets",
+                "namespaces", "pods", "endpoints", "nodes", "nodes/proxy"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Deployments
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Ingress (both stable and legacy)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["extensions"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+
+  # Leader election lease
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Strimzi resources the console operator reads/watches
+  - apiGroups: ["kafka.strimzi.io"]
+    resources: ["kafkas", "kafkanodepools", "kafkarebalances", "kafkatopics",
+                "kafkausers", "kafkaconnects", "kafkamirrormaker2s"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["kafka.strimzi.io"]
+    resources: ["kafkas", "kafkarebalances"]
+    verbs: ["patch"]
+
+  # Prometheus metrics access
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["prometheuses/api", "servicemonitors"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # OpenShift-specific (safe to leave in, ignored on plain k8s)
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    verbs: ["get"]
+  - apiGroups: ["config.openshift.io"]
+    resources: ["clusterversions"]
+    verbs: ["get"]
+
+  # Metrics endpoint scraping
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+
+---
+# ============================================================
+# 5. CLUSTER ROLE BINDING
+# ============================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: console-installer-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: console-installer-role
+subjects:
+  - kind: ServiceAccount
+    name: console-installer
+    namespace: streamshub-system
+
+---
+# ============================================================
+# 6. CLUSTER EXTENSION — installs the operator
+# ============================================================
+apiVersion: olm.operatorframework.io/v1
+kind: ClusterExtension
+metadata:
+  name: streamshub-console
+spec:
+  namespace: streamshub-system
+  serviceAccount:
+    name: console-installer
+  source:
+    sourceType: Catalog
+    catalog:
+      packageName: streamshub-console-operator
+      version: 0.11.0
