@@ -41,71 +41,78 @@ kind: ClusterRole
 metadata:
   name: console-installer-role
 rules:
-  # OLM core: manage CRDs the operator ships
+  # Everything from your original role...
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # The operator's own CRD group
   - apiGroups: ["console.streamshub.github.com"]
     resources: ["consoles", "consoles/status", "consoles/finalizers"]
     verbs: ["get", "list", "watch", "patch", "update", "create", "delete"]
 
-  # RBAC resources the operator itself creates at runtime
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # Core resources the operator manages
   - apiGroups: [""]
     resources: ["serviceaccounts", "services", "configmaps", "secrets",
                 "namespaces", "pods", "endpoints", "nodes", "nodes/proxy"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # Deployments
+  - apiGroups: [""]
+    resources: ["serviceaccounts/finalizers", "services/finalizers",
+                "configmaps/finalizers", "secrets/finalizers",
+                "namespaces/finalizers"]
+    verbs: ["update"]
+
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # Ingress (both stable and legacy)
+  - apiGroups: ["apps"]
+    resources: ["deployments/finalizers"]
+    verbs: ["update"]
+
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
   - apiGroups: ["extensions"]
     resources: ["ingresses"]
     verbs: ["get", "list", "watch"]
 
-  # Leader election lease
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # Strimzi resources the console operator reads/watches
   - apiGroups: ["kafka.strimzi.io"]
     resources: ["kafkas", "kafkanodepools", "kafkarebalances", "kafkatopics",
                 "kafkausers", "kafkaconnects", "kafkamirrormaker2s"]
     verbs: ["get", "list", "watch"]
+
   - apiGroups: ["kafka.strimzi.io"]
     resources: ["kafkas", "kafkarebalances"]
     verbs: ["patch"]
 
-  # Prometheus metrics access
   - apiGroups: ["monitoring.coreos.com"]
     resources: ["prometheuses/api", "servicemonitors"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-  # OpenShift-specific (safe to leave in, ignored on plain k8s)
   - apiGroups: ["route.openshift.io"]
     resources: ["routes"]
     verbs: ["get"]
+
   - apiGroups: ["config.openshift.io"]
     resources: ["clusterversions"]
     verbs: ["get"]
 
-  # Metrics endpoint scraping
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
 
+  # The critical addition — OLM v1 needs to set finalizers on ClusterExtension
+  - apiGroups: ["olm.operatorframework.io"]
+    resources: ["clusterextensions", "clusterextensions/finalizers"]
+    verbs: ["get", "list", "watch", "update", "patch"]
 ---
 # ============================================================
 # 5. CLUSTER ROLE BINDING
