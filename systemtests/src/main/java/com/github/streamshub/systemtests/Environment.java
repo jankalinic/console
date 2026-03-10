@@ -32,7 +32,7 @@ public class Environment {
     public static final String CONSOLE_DEPLOYMENT_NAME = ENVS.getOrDefault("CONSOLE_DEPLOYMENT_NAME", "streamshub-console");
     public static final String CONSOLE_CLUSTER_DOMAIN = ENVS.getOrDefault("CONSOLE_CLUSTER_DOMAIN", "");
 
-     // YAML bundle
+    // YAML bundle
     public static final String CONSOLE_OPERATOR_BUNDLE_URL = ENVS.getOrDefault("CONSOLE_OPERATOR_BUNDLE_URL", "");
 
     // OLM
@@ -40,6 +40,9 @@ public class Environment {
     public static final String CONSOLE_OLM_PACKAGE_NAME = ENVS.getOrDefault("CONSOLE_OLM_PACKAGE_NAME", "streamshub-console-operator");
     public static final String CONSOLE_OLM_CHANNEL_NAME = ENVS.getOrDefault("CONSOLE_OLM_CHANNEL_NAME", "alpha");
     public static final String CONSOLE_OLM_CATALOG_SOURCE_NAMESPACE = ENVS.getOrDefault("CONSOLE_OLM_CATALOG_SOURCE_NAMESPACE", Constants.OPENSHIFT_MARKETPLACE_NAMESPACE);
+
+    public static final boolean INSTALL_OLMV1 = ENVS.getOrDefault("INSTALL_OLMV1", Boolean::parseBoolean, true);
+    public static final String CONSOLE_OLMV1_CATALOG_IMAGE = ENVS.getOrDefault("CONSOLE_OLMV1_CATALOG_IMAGE", "");
 
     // Logs and debug
     public static final boolean CLEANUP_ENVIRONMENT = ENVS.getOrDefault("CLEANUP_ENVIRONMENT", Boolean::parseBoolean, true);

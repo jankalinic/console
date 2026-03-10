@@ -1,0 +1,15 @@
+---
+apiVersion: olm.operatorframework.io/v1
+kind: ClusterExtension
+metadata:
+  name: streamshub-console
+spec:
+  namespace: ${NAMESPACE}
+  serviceAccount:
+    name: console-installer
+  source:
+    sourceType: Catalog
+    catalog:
+      packageName: ${PACKAGE_NAME}
+      channels:
+      - ${CONSOLE_OLM_CHANNEL_NAME}

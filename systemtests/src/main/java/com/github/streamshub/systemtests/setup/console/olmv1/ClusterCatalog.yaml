@@ -1,0 +1,11 @@
+---
+apiVersion: olm.operatorframework.io/v1
+kind: ClusterCatalog
+metadata:
+  name: streamshub-catalog
+spec:
+  source:
+    type: Image
+    image:
+      ref: ${CATALOG_IMAGE}
+  availabilityMode: Available

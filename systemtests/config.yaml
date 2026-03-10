@@ -37,6 +37,8 @@ CONSOLE_OLM_CATALOG_SOURCE_NAMESPACE: openshift-marketplace
 CONSOLE_OLM_PACKAGE_NAME: streamshub-console-operator
 # OLM channel for selecting the Operator version
 CONSOLE_OLM_CHANNEL_NAME: alpha
+INSTALL_OLMV1: true
+CONSOLE_OLMV1_CATALOG_IMAGE: quay.io/streamshub/console-operator-catalog:0.11
 # -------------------------------------------
 # YAML
 # -------------------------------------------

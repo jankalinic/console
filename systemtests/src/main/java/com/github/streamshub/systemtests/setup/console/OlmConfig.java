@@ -3,7 +3,9 @@ package com.github.streamshub.systemtests.setup.console;
 import com.github.streamshub.systemtests.Environment;
 import com.github.streamshub.systemtests.constants.Constants;
 import com.github.streamshub.systemtests.exceptions.OperatorSdkNotInstalledException;
+import com.github.streamshub.systemtests.exceptions.SetupException;
 import com.github.streamshub.systemtests.logs.LogWrapper;
+import com.github.streamshub.systemtests.utils.FileUtils;
 import com.github.streamshub.systemtests.utils.WaitUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceUtils;
@@ -14,7 +16,9 @@ import io.fabric8.openshift.api.model.operatorhub.v1.OperatorGroupBuilder;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.ClusterServiceVersion;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.Subscription;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.SubscriptionBuilder;
+import io.skodjob.testframe.TestFrameEnv;
 import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.testframe.resources.ResourceItem;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
@@ -29,6 +33,13 @@ public class OlmConfig extends InstallConfig {
     private String channelName = Environment.CONSOLE_OLM_CHANNEL_NAME;
     private String subscriptionName = Constants.CONSOLE_OLM_SUBSCRIPTION_NAME;
 
+    private static final String OLMV1_RESOURCES = TestFrameEnv.USER_PATH + "/src/main/java/com/github/streamshub/systemtests/setup/console/olmv1/";
+    private static final String OLMV1_CLUSTER_CATALOG = OLMV1_RESOURCES + "ClusterCatalog.yaml";
+    private static final String OLMV1_CLUSTER_EXTENSION = OLMV1_RESOURCES + "ClusterExtension.yaml";
+    private static final String OLMV1_CLUSTER_ROLE = OLMV1_RESOURCES + "ClusterRole.yaml";
+    private static final String OLMV1_CLUSTER_ROLE_BINDING = OLMV1_RESOURCES + "ClusterRoleBinding.yaml";
+    private static final String OLMV1_SERVICE_ACCOUNT = OLMV1_RESOURCES + "ServiceAccount.yaml";
+
     public OlmConfig(String namespace) {
         super(namespace);
         LOGGER.info("Console Operator will be installed using OLM");
@@ -40,11 +51,13 @@ public class OlmConfig extends InstallConfig {
 
     @Override
     public void install() {
-        KubeResourceManager.get().createOrUpdateResourceWithWait(getOlmOperatorGroup());
-        KubeResourceManager.get().createOrUpdateResourceWithWait(getOlmSubscription());
-
-        WaitUtils.waitForDeploymentWithPrefixIsReady(deploymentNamespace, olmAppBundlePrefix);
-
+        if (ClusterUtils.isOcp()  && Environment.INSTALL_OLMV1) {
+            setupOlmv1();
+        } else {
+            KubeResourceManager.get().createOrUpdateResourceWithWait(getOlmOperatorGroup());
+            KubeResourceManager.get().createOrUpdateResourceWithWait(getOlmSubscription());
+            WaitUtils.waitForDeploymentWithPrefixIsReady(deploymentNamespace, olmAppBundlePrefix);
+        }
         // Get and set the deployment full name from known OLM bundle prefix
         deploymentName = ResourceUtils.listKubeResourcesByPrefix(Deployment.class, deploymentNamespace, olmAppBundlePrefix)
             .get(0)
@@ -97,5 +110,36 @@ public class OlmConfig extends InstallConfig {
                 .withUpgradeStrategy("Default")
             .endSpec()
             .build();
+    }
+
+    private void setupOlmv1() {
+        for (String url : List.of(OLMV1_CLUSTER_CATALOG, OLMV1_CLUSTER_EXTENSION, OLMV1_CLUSTER_ROLE, OLMV1_CLUSTER_ROLE_BINDING, OLMV1_SERVICE_ACCOUNT)) {
+            try {
+                KubeResourceManager.get().kubeCmdClient().inNamespace(deploymentNamespace)
+                    .applyContent(FileUtils.readFile(url)
+                        .replace("${NAMESPACE}", deploymentNamespace)
+                        .replace("${PACKAGE_NAME}", Environment.CONSOLE_OLM_PACKAGE_NAME)
+                        .replace("${CONSOLE_OLM_CHANNEL_NAME}", Environment.CONSOLE_OLM_CHANNEL_NAME)
+                        .replace("${CATALOG_IMAGE}", Environment.CONSOLE_OLMV1_CATALOG_IMAGE));
+            } catch (Exception e) {
+                throw new SetupException("Unable to load resources from " + url + ": " + e.getMessage());
+            }
+        }
+        KubeResourceManager.get().pushToStack(new ResourceItem<>(this::deleteOlmv1));
+    }
+
+    private void deleteOlmv1() {
+        for (String url : List.of(OLMV1_CLUSTER_CATALOG, OLMV1_CLUSTER_EXTENSION, OLMV1_CLUSTER_ROLE, OLMV1_CLUSTER_ROLE_BINDING, OLMV1_SERVICE_ACCOUNT)) {
+            try {
+                KubeResourceManager.get().kubeCmdClient().inNamespace(deploymentNamespace)
+                    .delete(FileUtils.readFile(url)
+                        .replace("${NAMESPACE}", deploymentNamespace)
+                        .replace("${PACKAGE_NAME}", Environment.CONSOLE_OLM_PACKAGE_NAME)
+                        .replace("${CONSOLE_OLM_CHANNEL_NAME}", Environment.CONSOLE_OLM_CHANNEL_NAME)
+                        .replace("${CATALOG_IMAGE}", Environment.CONSOLE_OLMV1_CATALOG_IMAGE));
+            } catch (Exception e) {
+                throw new SetupException("Unable to delete resources from " + url + ": " + e.getMessage());
+            }
+        }
     }
 }
