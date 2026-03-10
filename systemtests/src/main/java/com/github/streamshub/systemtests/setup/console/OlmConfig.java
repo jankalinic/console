@@ -115,7 +115,7 @@ public class OlmConfig extends InstallConfig {
     private void setupOlmv1() {
         for (String url : List.of(OLMV1_CLUSTER_CATALOG, OLMV1_CLUSTER_EXTENSION, OLMV1_CLUSTER_ROLE, OLMV1_CLUSTER_ROLE_BINDING, OLMV1_SERVICE_ACCOUNT)) {
             try {
-                KubeResourceManager.get().kubeCmdClient().inNamespace(deploymentNamespace)
+                KubeResourceManager.get().kubeCmdClient()
                     .applyContent(FileUtils.readFile(url)
                         .replace("${NAMESPACE}", deploymentNamespace)
                         .replace("${PACKAGE_NAME}", Environment.CONSOLE_OLM_PACKAGE_NAME)
@@ -131,7 +131,7 @@ public class OlmConfig extends InstallConfig {
     private void deleteOlmv1() {
         for (String url : List.of(OLMV1_CLUSTER_CATALOG, OLMV1_CLUSTER_EXTENSION, OLMV1_CLUSTER_ROLE, OLMV1_CLUSTER_ROLE_BINDING, OLMV1_SERVICE_ACCOUNT)) {
             try {
-                KubeResourceManager.get().kubeCmdClient().inNamespace(deploymentNamespace)
+                KubeResourceManager.get().kubeCmdClient()
                     .delete(FileUtils.readFile(url)
                         .replace("${NAMESPACE}", deploymentNamespace)
                         .replace("${PACKAGE_NAME}", Environment.CONSOLE_OLM_PACKAGE_NAME)
