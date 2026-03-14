@@ -5,12 +5,11 @@ import com.github.streamshub.systemtests.logs.LogWrapper;
 import com.github.streamshub.systemtests.resourcetypes.prometheus.ServiceMonitorType;
 import com.github.streamshub.systemtests.utils.FileUtils;
 import com.github.streamshub.systemtests.utils.SetupUtils;
-import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceOrder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.api.model.monitoring.v1.ServiceMonitor;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -50,7 +49,7 @@ public class YamlConfig extends InstallConfig {
         });
 
         // Remove service monitor on non-openshift clusters if it does not have the CRDs
-        if (!ServiceMonitorType.isAvailable() && !ClusterUtils.isOcp()) {
+        if (!ServiceMonitorType.isAvailable()) {
             allResources = allResources.stream()
                 .filter(resource -> !(resource instanceof ServiceMonitor))
                 .toList();

@@ -5,19 +5,21 @@ import com.github.streamshub.systemtests.enums.BrowserTypes;
 import com.github.streamshub.systemtests.exceptions.SetupException;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import io.fabric8.kubernetes.api.model.Service;
-import io.skodjob.testframe.enums.InstallType;
-import io.skodjob.testframe.environment.TestEnvironmentVariables;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.enums.InstallType;
+import io.skodjob.kubetest4j.environment.TestEnvironmentVariables;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 
 import java.io.IOException;
 
-import static io.skodjob.testframe.TestFrameEnv.USER_PATH;
+import static io.skodjob.kubetest4j.KubeTestEnv.USER_PATH;
 
 public class Environment {
     private static final TestEnvironmentVariables ENVS = new TestEnvironmentVariables();
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+    // General k8s
     public static final String CLIENT_TYPE = ENVS.getOrDefault("CLIENT_TYPE", "kubectl");
+    public static final String TEST_CLUSTER_TYPE = ENVS.getOrDefault("TEST_CLUSTER_TYPE", "");
+    public static final String KUBECONFIG = ENVS.getOrDefault("KUBECONFIG", "");
 
     // Strimzi
     public static final String STRIMZI_OPERATOR_NAME = ENVS.getOrDefault("STRIMZI_OPERATOR_NAME", "strimzi-cluster-operator");
@@ -57,6 +59,8 @@ public class Environment {
     public static final String TEST_CLIENTS_IMAGE = ENVS.getOrDefault("TEST_CLIENTS_IMAGE", "");
     public static final String ST_KAFKA_VERSION = ENVS.getOrDefault("ST_KAFKA_VERSION", "");
     // Connect
+    public static final String ST_CONNECT_BUILD_BASE_KAFKA_IMAGE = ENVS.getOrDefault("ST_CONNECT_BUILD_BASE_KAFKA_IMAGE",
+        "quay.io/strimzi/kafka:latest-kafka-" + ST_KAFKA_VERSION);
     public static final String ST_FILE_PLUGIN_URL = ENVS.getOrDefault("ST_FILE_PLUGIN_URL",
         "https://repo1.maven.org/maven2/org/apache/kafka/connect-file/" + ST_KAFKA_VERSION + "/connect-file-" + ST_KAFKA_VERSION + ".jar");
     public static final String CONNECT_IMAGE_WITH_FILE_PLUGIN = ENVS.getOrDefault("CONNECT_IMAGE_WITH_FILE_PLUGIN", "");
@@ -163,7 +167,7 @@ public class Environment {
      * @throws SetupException if the registry {@link Service} is not present in the cluster
      */
     public static String getConnectImageOutputRegistry() {
-        if (ClusterUtils.isOcp()) {
+        if (ClusterUtils.isOpenshift()) {
             return "image-registry.openshift-image-registry.svc:5000";
         }
 

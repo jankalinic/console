@@ -8,9 +8,9 @@ import com.github.streamshub.systemtests.setup.strimzi.StrimziOperatorSetup;
 import com.github.streamshub.systemtests.utils.SetupUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.NamespaceUtils;
-import io.skodjob.testframe.annotations.ResourceManager;
-import io.skodjob.testframe.annotations.TestVisualSeparator;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.annotations.ResourceManager;
+import io.skodjob.kubetest4j.annotations.TestVisualSeparator;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +39,6 @@ public abstract class AbstractST {
             SetupUtils.initializeSystemTests();
             initialized = true;
         }
-
         KubeResourceManager.get().setTestContext(extensionContext);
         NamespaceUtils.prepareNamespace(Constants.CO_NAMESPACE);
         strimziOperatorSetup.install();

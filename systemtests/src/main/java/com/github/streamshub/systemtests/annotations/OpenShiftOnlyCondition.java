@@ -13,7 +13,7 @@ public class OpenShiftOnlyCondition implements ExecutionCondition {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext extensionContext) {
 
-        if (ClusterUtils.isOcp()) {
+        if (ClusterUtils.isOpenshift()) {
             return ConditionEvaluationResult.enabled("Test is enabled");
         } else {
             LOGGER.info("{} is @OpenShiftOnly, but the running cluster is not OpenShift: Ignoring {}",

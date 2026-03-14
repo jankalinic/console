@@ -2,6 +2,7 @@
 # -------------------------------------------
 # Common
 # -------------------------------------------
+TEST_CLUSTER_TYPE: microshift
 # Cleanup environment after test. In case of debugging, this env lets you skip afterEach and afterAll.
 CLEANUP_ENVIRONMENT: true
 # This allows re-deployment of console operator if it already exists

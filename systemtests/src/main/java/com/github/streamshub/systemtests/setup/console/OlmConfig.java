@@ -14,7 +14,7 @@ import io.fabric8.openshift.api.model.operatorhub.v1.OperatorGroupBuilder;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.ClusterServiceVersion;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.Subscription;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.SubscriptionBuilder;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
@@ -32,7 +32,7 @@ public class OlmConfig extends InstallConfig {
     public OlmConfig(String namespace) {
         super(namespace);
         LOGGER.info("Console Operator will be installed using OLM");
-        if (!ClusterUtils.isOcp() &&
+        if (!ClusterUtils.isOpenShiftLike() &&
             ResourceUtils.getKubeResource(CustomResourceDefinition.class, "subscriptions.operators.coreos.com") == null) {
             throw new OperatorSdkNotInstalledException("Operator SDK is not installed on the current cluster. Cannot install Console Operator using subscriptions");
         }

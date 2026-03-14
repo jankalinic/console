@@ -3,13 +3,18 @@ package com.github.streamshub.systemtests.setup.strimzi;
 import com.github.streamshub.systemtests.Environment;
 import com.github.streamshub.systemtests.constants.Constants;
 import com.github.streamshub.systemtests.constants.Labels;
+import com.github.streamshub.systemtests.exceptions.SetupException;
 import com.github.streamshub.systemtests.logs.LogWrapper;
+import com.github.streamshub.systemtests.utils.resourceutils.ClusterUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.ResourceUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.console.ConsoleUtils;
 import com.github.streamshub.systemtests.utils.resourceutils.kafka.KafkaUtils;
 import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy;
 import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyBuilder;
-import io.skodjob.testframe.resources.KubeResourceManager;
+import io.skodjob.kubetest4j.enums.LogLevel;
+import io.skodjob.kubetest4j.executor.Exec;
+import io.skodjob.kubetest4j.executor.ExecResult;
+import io.skodjob.kubetest4j.resources.KubeResourceManager;
 import io.strimzi.api.ResourceLabels;
 import io.strimzi.api.kafka.model.connect.KafkaConnect;
 import io.strimzi.api.kafka.model.connect.KafkaConnectBuilder;
@@ -22,6 +27,8 @@ import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
 import io.strimzi.api.kafka.model.connector.KafkaConnectorBuilder;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class KafkaConnectSetup {
@@ -146,32 +153,68 @@ public class KafkaConnectSetup {
      */
     public static KafkaConnectBuilder addFilePluginOrImage(String namespace, KafkaConnectBuilder kafkaConnectBuilder) {
         if (Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN.isEmpty()) {
-            Plugin filePlugin = new PluginBuilder()
-                .withName("file-plugin")
-                .withArtifacts(new JarArtifactBuilder()
-                    .withUrl(Environment.ST_FILE_PLUGIN_URL)
-                    .build())
-                .build();
+            if (ClusterUtils.isMicroShift()) {
+                // Build directly into CRI-O storage via sudo podman — no registry needed
+                String connectImage = "localhost/kafka-connect-file-plugin:latest";
+                buildConnectImageForMicroShift(Environment.ST_KAFKA_VERSION, Environment.ST_CONNECT_BUILD_BASE_KAFKA_IMAGE, connectImage);
 
-            // Sonarcube safe image tag with positive uuid
-            String tag = String.valueOf(UUID.randomUUID().hashCode() & 0x7fffffff);
-            String imageFullPath = Environment.getConnectImageOutputRegistry(namespace, Constants.CONNECT_BUILD_IMAGE_NAME, tag);
-            LOGGER.info("Kafka connect build image [{}]", imageFullPath);
+                LOGGER.info("Using freshly built MicroShift connect image [{}]", connectImage);
+                return kafkaConnectBuilder
+                    .editOrNewSpec()
+                        .withImage(connectImage)
+                    .endSpec();
 
-            return kafkaConnectBuilder
-                .editOrNewSpec()
-                    .editOrNewBuild()
-                        .withPlugins(filePlugin)
-                        .withOutput(dockerOutput(imageFullPath))
-                    .endBuild()
-                .endSpec();
-        } else {
-            LOGGER.info("Using {} image from {} env variable", Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN, Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN);
-            return kafkaConnectBuilder
-                .editOrNewSpec()
-                    .withImage(Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN)
-                .endSpec();
+            } else {
+                // OpenShift / Minikube: use build api
+                Plugin filePlugin = new PluginBuilder()
+                    .withName("file-plugin")
+                    .withArtifacts(new JarArtifactBuilder()
+                        .withUrl(Environment.ST_FILE_PLUGIN_URL)
+                        .build())
+                    .build();
+
+                // Sonarcube safe image tag with positive uuid
+                String tag = String.valueOf(UUID.randomUUID().hashCode() & 0x7fffffff);
+                String imageFullPath = Environment.getConnectImageOutputRegistry(namespace, Constants.CONNECT_BUILD_IMAGE_NAME, tag);
+                LOGGER.info("Kafka connect build image [{}]", imageFullPath);
+
+                return kafkaConnectBuilder
+                    .editOrNewSpec()
+                        .editOrNewBuild()
+                            .withPlugins(filePlugin)
+                            .withOutput(dockerOutput(imageFullPath))
+                        .endBuild()
+                    .endSpec();
+            }
         }
+
+        // MicroShift (or override) = pre-built image, no build api needed
+        // On MicroShift: built for example directly into CRI-O storage
+        LOGGER.info("Using {} image from {} env variable", Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN, Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN);
+        return kafkaConnectBuilder
+            .editOrNewSpec()
+                .withImage(Environment.CONNECT_IMAGE_WITH_FILE_PLUGIN)
+            .endSpec();
+    }
+
+    public static void buildConnectImageForMicroShift(String kafkaVersion, String kafkaImage, String connectImage) {
+        LOGGER.info("Building Connect image for MicroShift: {}", connectImage);
+
+        String buildScript = "./systemtest/src/test/resources/connect-build/build-connect-image.sh";
+
+        List<String> command = new ArrayList<>(List.of(
+            "sudo", buildScript, kafkaVersion, kafkaImage, connectImage
+        ));
+
+        ExecResult result = Exec.exec(null, command, 0, LogLevel.DEBUG, true, true);
+
+        if (result.returnCode() != 0) {
+            throw new SetupException(
+                "Failed to build Connect image for MicroShift. stderr: %s".formatted(result.err())
+            );
+        }
+
+        LOGGER.info("Successfully built Connect image [{}] for MicroShift", connectImage);
     }
 
     /**
